@@ -18,7 +18,8 @@ local sw, sh = 318, 212
 -- Main menu
 local mainMenu = {
     {title = "1. GDP & Deflator", screen = "gdp_menu"},
-    {title = "2. CPI & Inflation", screen = "cpi_menu"}
+    {title = "2. CPI & Inflation", screen = "cpi_menu"},
+    {title = "3. Quick Formulas", screen = "formulas"}
 }
 
 -- GDP submenu
@@ -774,6 +775,43 @@ local function calculatePurchasingPowerCalc()
 end
 
 --=====================================
+-- SCREENS: FORMULAS
+--=====================================
+
+local function renderFormulas(gc)
+    drawTitle(gc, "Quick Formulas for TI-Nspire")
+
+    local y = 30
+    local formulas = {
+        "GDP FORMULAS:",
+        "Define gdp_r(c,i,g,x,m)=c+i+g+x-m",
+        "  (GDP by expenditure)",
+        "",
+        "Define ds(vyp,pp)=vyp-pp",
+        "  (Added value)",
+        "",
+        "Define profit(vyr,syr,zp)=vyr-syr-zp",
+        "  (Firm profit)",
+        "",
+        "CPI FORMULAS:",
+        "Define cpi(pn,p0,q)=sum(pn*q)/sum(p0*q)*100",
+        "  (CPI index)",
+        "",
+        "Define infl(cpi1,cpi0)=(cpi1-cpi0)/cpi0*100",
+        "  (Inflation rate)"
+    }
+
+    for i, line in ipairs(formulas) do
+        local isBold = line:find(":$") or line:find("^Define")
+        local size = line:find("^Define") and 8 or (isBold and 9 or 8)
+        drawText(gc, line, 5, y, size, isBold)
+        y = y + (line == "" and 8 or 12)
+    end
+
+    drawText(gc, "ESC to return", 5, sh - 15, 7)
+end
+
+--=====================================
 -- MAIN RENDERING
 --=====================================
 
@@ -827,6 +865,8 @@ function on.paint(gc)
         renderRealIncome(gc)
     elseif state.screen == "cpi_purchasing" then
         renderPurchasingPower(gc)
+    elseif state.screen == "formulas" then
+        renderFormulas(gc)
     else
         drawTitle(gc, "In development")
         drawText(gc, "ESC to return", 10, 40, 9)
@@ -1104,6 +1144,8 @@ function on.escapeKey()
             state.screen = "cpi_weighted_step1"
         elseif state.screen == "cpi_weighted_step3" then
             state.screen = "cpi_weighted_step2"
+        elseif state.screen == "formulas" then
+            state.screen = "menu"
         elseif state.screen:find("gdp") then
             state.screen = state.screen == "gdp_menu" and "menu" or "gdp_menu"
         elseif state.screen:find("cpi") then
