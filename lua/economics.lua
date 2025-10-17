@@ -8,8 +8,8 @@ local state = {
     selectedField = 1,
     inputs = {},
     result = nil,
-    editBuffer = "",  -- Buffer for current field being edited
-    itemsOffset = 0   -- Offset for scrolling items
+    editBuffer = "",
+    itemsOffset = 0
 }
 
 -- Screen dimensions
@@ -18,8 +18,7 @@ local sw, sh = 318, 212
 -- Main menu
 local mainMenu = {
     {title = "1. GDP & Deflator", screen = "gdp_menu"},
-    {title = "2. CPI & Inflation", screen = "cpi_menu"},
-    {title = "3. Quick Formulas", screen = "formulas"}
+    {title = "2. CPI & Inflation", screen = "cpi_menu"}
 }
 
 -- GDP submenu
@@ -33,12 +32,7 @@ local gdpMenu = {
 -- CPI submenu
 local cpiMenu = {
     {title = "1. CPI (Laspeyres)", screen = "cpi_laspeyres_items"},
-    {title = "2. Paasche Index", screen = "cpi_paasche_items"},
-    {title = "3. CPI (Weighted)", screen = "cpi_weighted_items"},
-    {title = "4. Fisher Index", screen = "cpi_fisher"},
-    {title = "5. Inflation", screen = "cpi_inflation"},
-    {title = "6. Real Income", screen = "cpi_real_income"},
-    {title = "7. Purchasing Power", screen = "cpi_purchasing"},
+    {title = "2. Inflation", screen = "cpi_inflation"},
     {title = "<- Back", screen = "menu"}
 }
 
@@ -74,45 +68,9 @@ local function calculateLaspeyres(quantities, prices_base, prices_current)
     return cpi, sum_base, sum_current
 end
 
-local function calculatePaasche(quantities, prices_base, prices_current)
-    local sum_base, sum_current = 0, 0
-    for i = 1, #quantities do
-        sum_base = sum_base + (prices_base[i] * quantities[i])
-        sum_current = sum_current + (prices_current[i] * quantities[i])
-    end
-    if sum_base == 0 then return nil, nil, nil end
-    local deflator = (sum_current / sum_base) * 100
-    return deflator, sum_base, sum_current
-end
-
-local function calculateWeightedCPI(q_system, q_basket, prices_base, prices_current)
-    local sum_base, sum_current = 0, 0
-    for i = 1, #q_system do
-        sum_base = sum_base + (q_system[i] * prices_base[i] * q_basket[i])
-        sum_current = sum_current + (q_system[i] * prices_current[i] * q_basket[i])
-    end
-    if sum_base == 0 then return nil, nil, nil end
-    local cpi = (sum_current / sum_base) * 100
-    return cpi, sum_base, sum_current
-end
-
-local function calculateFisher(laspeyres, paasche)
-    return math.sqrt(laspeyres * paasche)
-end
-
 local function calculateInflation(cpi_current, cpi_previous)
     if cpi_previous == 0 then return nil end
     return ((cpi_current - cpi_previous) / cpi_previous) * 100
-end
-
-local function calculateRealIncome(nominal, cpi)
-    if cpi == 0 then return nil end
-    return nominal / (cpi / 100)
-end
-
-local function calculatePurchasingPower(cpi)
-    if cpi == 0 then return nil end
-    return 100 / cpi
 end
 
 --=====================================
@@ -144,7 +102,6 @@ local function drawInputField(gc, label, value, x, y, selected)
     end
     gc:setColorRGB(0, 0, 0)
     gc:drawRect(x, inputY, 100, 15)
-    -- Show edit buffer if editing, otherwise show value
     local displayValue = (selected and state.editBuffer ~= "") and state.editBuffer or tostring(value or "")
     drawText(gc, displayValue, x + 3, inputY, 9)
 end
@@ -432,249 +389,6 @@ local function calculateLaspeyresCalc()
     end
 end
 
-local function renderPaascheItems(gc)
-    drawTitle(gc, "Paasche Index - Number of Items")
-
-    if not state.inputs.paasche_items_count then
-        state.inputs.paasche_items_count = 2
-    end
-
-    drawText(gc, "Enter number of items (default: 2)", 10, 50, 9)
-    drawText(gc, "Max: 5 items", 10, 65, 8)
-    drawInputField(gc, "Items", state.inputs.paasche_items_count, 10, 90, true)
-
-    drawText(gc, "Enter confirm, ESC back", 5, sh - 15, 7)
-end
-
-local function renderPaascheBasket(gc)
-    drawTitle(gc, "Paasche - STEP 1: Basket (current yr)")
-
-    if not state.inputs.paasche then
-        state.inputs.paasche = {n = 2, quantities = {0, 0}}
-    end
-
-    local inp = state.inputs.paasche
-    local y = 30
-
-    drawText(gc, "I_P = (SUM(pt*qt) / SUM(p0*qt)) * 100", 10, y, 8)
-    y = y + 13
-    drawText(gc, "qt - current year basket quantities", 10, y, 7)
-    y = y + 20
-
-    drawText(gc, "Number of items: " .. inp.n, 10, y, 9, true)
-    y = y + 20
-
-    for i = 1, inp.n do
-        drawInputField(gc, "Item " .. i .. " qty", inp.quantities[i], 10, y, state.selectedField == i)
-        y = y + 30
-    end
-
-    drawText(gc, "^v nav, Enter next step, ESC back", 5, sh - 15, 7)
-end
-
-local function renderPaascheStep2(gc)
-    drawTitle(gc, "Paasche - STEP 2: Base Year Prices")
-
-    local inp = state.inputs.paasche
-    if not inp or not inp.prices_base then
-        return
-    end
-
-    local y = 30
-    drawText(gc, "Enter base year prices (p0)", 10, y, 9)
-    y = y + 20
-
-    for i = 1, inp.n do
-        drawInputField(gc, "Item " .. i .. " p0", inp.prices_base[i], 10, y, state.selectedField == i)
-        y = y + 30
-    end
-
-    drawText(gc, "^v nav, Enter next step, ESC back", 5, sh - 15, 7)
-end
-
-local function renderPaascheStep3(gc)
-    drawTitle(gc, "Paasche - STEP 3: Current Year Prices")
-
-    local inp = state.inputs.paasche
-    if not inp or not inp.prices_current then
-        return
-    end
-
-    local y = 30
-    drawText(gc, "Enter current year prices (pt)", 10, y, 9)
-    y = y + 20
-
-    for i = 1, inp.n do
-        drawInputField(gc, "Item " .. i .. " pt", inp.prices_current[i], 10, y, state.selectedField == i)
-        y = y + 30
-    end
-
-    drawText(gc, "^v nav, Enter calc, ESC back", 5, sh - 15, 7)
-
-    if state.result then
-        local lines = {
-            "RESULT:",
-            "Base basket cost: " .. round(state.result.sum_base, 2),
-            "Current basket cost: " .. round(state.result.sum_current, 2),
-            "Deflator = " .. round(state.result.deflator, 2) .. "%",
-            "Price level rose " .. round(state.result.deflator / 100, 2) .. "x"
-        }
-        drawResult(gc, lines, 10, 135, sw - 20, 70)
-    end
-end
-
-local function calculatePaascheCalc()
-    local inp = state.inputs.paasche
-    if not inp or not inp.quantities or not inp.prices_base or not inp.prices_current then
-        return
-    end
-
-    local deflator, sum_base, sum_current = calculatePaasche(inp.quantities, inp.prices_base, inp.prices_current)
-    if deflator then
-        state.result = {
-            deflator = deflator,
-            sum_base = sum_base,
-            sum_current = sum_current
-        }
-    end
-end
-
-local function renderWeightedCPIItems(gc)
-    drawTitle(gc, "CPI Weighted - Number of Items")
-
-    if not state.inputs.cpi_weighted_items_count then
-        state.inputs.cpi_weighted_items_count = 2
-    end
-
-    drawText(gc, "Enter number of items (default: 2)", 10, 50, 9)
-    drawText(gc, "Max: 5 items", 10, 65, 8)
-    drawInputField(gc, "Items", state.inputs.cpi_weighted_items_count, 10, 90, true)
-
-    drawText(gc, "Enter confirm, ESC back", 5, sh - 15, 7)
-end
-
-local function renderWeightedCPIStep1(gc)
-    drawTitle(gc, "CPI Weighted - STEP 1: Quantities")
-
-    local inp = state.inputs.cpi_weighted
-    if not inp then
-        return
-    end
-
-    local y = 30
-    drawText(gc, "Enter system qty and basket qty", 10, y, 9)
-    drawText(gc, "Q_sys = total in economy, Q_bsk = typical", 10, y + 13, 7)
-    y = y + 30
-
-    for i = 1, inp.n do
-        drawText(gc, "Item " .. i .. ":", 10, y, 9, true)
-        y = y + 15
-        drawInputField(gc, "Q_sys", inp.q_system[i], 10, y, state.selectedField == (i-1)*2 + 1)
-        drawInputField(gc, "Q_bsk", inp.q_basket[i], 140, y, state.selectedField == (i-1)*2 + 2)
-        y = y + 30
-    end
-
-    drawText(gc, "^v nav, Enter next step, ESC back", 5, sh - 15, 7)
-end
-
-local function renderWeightedCPIStep2(gc)
-    drawTitle(gc, "CPI Weighted - STEP 2: Base Prices")
-
-    local inp = state.inputs.cpi_weighted
-    if not inp or not inp.prices_base then
-        return
-    end
-
-    local y = 30
-    drawText(gc, "Enter base year prices (p0)", 10, y, 9)
-    y = y + 20
-
-    for i = 1, inp.n do
-        drawInputField(gc, "Item " .. i .. " p0", inp.prices_base[i], 10, y, state.selectedField == i)
-        y = y + 30
-    end
-
-    drawText(gc, "^v nav, Enter next step, ESC back", 5, sh - 15, 7)
-end
-
-local function renderWeightedCPIStep3(gc)
-    drawTitle(gc, "CPI Weighted - STEP 3: Current Prices")
-
-    local inp = state.inputs.cpi_weighted
-    if not inp or not inp.prices_current then
-        return
-    end
-
-    local y = 30
-    drawText(gc, "Enter current year prices (pt)", 10, y, 9)
-    y = y + 20
-
-    for i = 1, inp.n do
-        drawInputField(gc, "Item " .. i .. " pt", inp.prices_current[i], 10, y, state.selectedField == i)
-        y = y + 30
-    end
-
-    drawText(gc, "^v nav, Enter calc, ESC back", 5, sh - 15, 7)
-
-    if state.result then
-        local lines = {
-            "RESULT:",
-            "Base weighted cost: " .. round(state.result.sum_base, 2),
-            "Current weighted cost: " .. round(state.result.sum_current, 2),
-            "CPI (weighted) = " .. round(state.result.cpi, 2) .. "%",
-            "Price level rose " .. round(state.result.cpi / 100, 2) .. "x"
-        }
-        drawResult(gc, lines, 10, 135, sw - 20, 70)
-    end
-end
-
-local function calculateWeightedCPICalc()
-    local inp = state.inputs.cpi_weighted
-    if not inp or not inp.q_system or not inp.q_basket or not inp.prices_base or not inp.prices_current then
-        return
-    end
-
-    local cpi, sum_base, sum_current = calculateWeightedCPI(inp.q_system, inp.q_basket, inp.prices_base, inp.prices_current)
-    if cpi then
-        state.result = {
-            cpi = cpi,
-            sum_base = sum_base,
-            sum_current = sum_current
-        }
-    end
-end
-
-local function renderFisher(gc)
-    drawTitle(gc, "Fisher Index")
-
-    if not state.inputs.fisher then
-        state.inputs.fisher = {laspeyres = 0, paasche = 0}
-    end
-
-    local inp = state.inputs.fisher
-
-    drawText(gc, "I_F = SQRT(I_L * I_P)", 10, 30, 8)
-    drawText(gc, "Geometric mean of Laspeyres & Paasche", 10, 43, 7)
-
-    drawInputField(gc, "Laspeyres Index", inp.laspeyres, 10, 65, state.selectedField == 1)
-    drawInputField(gc, "Paasche Index", inp.paasche, 10, 105, state.selectedField == 2)
-
-    drawText(gc, "Tab/^v nav, Enter calc, ESC back", 5, sh - 15, 7)
-
-    if state.result then
-        drawResult(gc, {
-            "Fisher Index:",
-            round(state.result, 2) .. "%"
-        }, 10, 150, sw - 20, 40)
-    end
-end
-
-local function calculateFisherCalc()
-    local inp = state.inputs.fisher
-    if not inp then return end
-    state.result = calculateFisher(inp.laspeyres, inp.paasche)
-end
-
 local function renderInflation(gc)
     drawTitle(gc, "Inflation")
 
@@ -709,108 +423,6 @@ local function calculateInflationCalc()
     state.result = calculateInflation(inp.cpi_current, inp.cpi_previous)
 end
 
-local function renderRealIncome(gc)
-    drawTitle(gc, "Real Income")
-
-    if not state.inputs.real_income then
-        state.inputs.real_income = {nominal = 0, cpi = 100}
-    end
-
-    local inp = state.inputs.real_income
-
-    drawText(gc, "Real = Nominal / (CPI/100)", 10, 30, 8)
-    drawText(gc, "Income adjusted for inflation", 10, 43, 7)
-
-    drawInputField(gc, "Nominal income", inp.nominal, 10, 65, state.selectedField == 1)
-    drawInputField(gc, "CPI (%)", inp.cpi, 10, 105, state.selectedField == 2)
-
-    drawText(gc, "Tab/^v nav, Enter calc, ESC back", 5, sh - 15, 7)
-
-    if state.result then
-        drawResult(gc, {
-            "Real income:",
-            round(state.result, 2)
-        }, 10, 150, sw - 20, 40)
-    end
-end
-
-local function calculateRealIncomeCalc()
-    local inp = state.inputs.real_income
-    if not inp then return end
-    state.result = calculateRealIncome(inp.nominal, inp.cpi)
-end
-
-local function renderPurchasingPower(gc)
-    drawTitle(gc, "Purchasing Power")
-
-    if not state.inputs.purchasing then
-        state.inputs.purchasing = {cpi = 100}
-    end
-
-    local inp = state.inputs.purchasing
-
-    drawText(gc, "PP = 100 / CPI", 10, 30, 8)
-    drawText(gc, "Value of currency in real terms", 10, 43, 7)
-
-    drawInputField(gc, "CPI (%)", inp.cpi, 10, 65, state.selectedField == 1)
-
-    drawText(gc, "Tab/^v nav, Enter calc, ESC back", 5, sh - 15, 7)
-
-    if state.result then
-        local change = 100 / state.result
-        local changeText = change > 1 and "Fell " .. round(change, 2) .. "x" or
-                          change < 1 and "Rose " .. round(1/change, 2) .. "x" or ""
-        drawResult(gc, {
-            "Purchasing power:",
-            round(state.result, 4),
-            changeText
-        }, 10, 120, sw - 20, 50)
-    end
-end
-
-local function calculatePurchasingPowerCalc()
-    local inp = state.inputs.purchasing
-    if not inp then return end
-    state.result = calculatePurchasingPower(inp.cpi)
-end
-
---=====================================
--- SCREENS: FORMULAS
---=====================================
-
-local function renderFormulas(gc)
-    drawTitle(gc, "Quick Formulas for TI-Nspire")
-
-    local y = 30
-    local formulas = {
-        "GDP FORMULAS:",
-        "Define gdp_r(c,i,g,x,m)=c+i+g+x-m",
-        "  (GDP by expenditure)",
-        "",
-        "Define ds(vyp,pp)=vyp-pp",
-        "  (Added value)",
-        "",
-        "Define profit(vyr,syr,zp)=vyr-syr-zp",
-        "  (Firm profit)",
-        "",
-        "CPI FORMULAS:",
-        "Define cpi(pn,p0,q)=sum(pn*q)/sum(p0*q)*100",
-        "  (CPI index)",
-        "",
-        "Define infl(cpi1,cpi0)=(cpi1-cpi0)/cpi0*100",
-        "  (Inflation rate)"
-    }
-
-    for i, line in ipairs(formulas) do
-        local isBold = line:find(":$") or line:find("^Define")
-        local size = line:find("^Define") and 8 or (isBold and 9 or 8)
-        drawText(gc, line, 5, y, size, isBold)
-        y = y + (line == "" and 8 or 12)
-    end
-
-    drawText(gc, "ESC to return", 5, sh - 15, 7)
-end
-
 --=====================================
 -- MAIN RENDERING
 --=====================================
@@ -841,32 +453,8 @@ function on.paint(gc)
         renderLaspeyresStep2(gc)
     elseif state.screen == "cpi_laspeyres_step3" then
         renderLaspeyresStep3(gc)
-    elseif state.screen == "cpi_paasche_items" then
-        renderPaascheItems(gc)
-    elseif state.screen == "cpi_paasche_basket" then
-        renderPaascheBasket(gc)
-    elseif state.screen == "cpi_paasche_step2" then
-        renderPaascheStep2(gc)
-    elseif state.screen == "cpi_paasche_step3" then
-        renderPaascheStep3(gc)
-    elseif state.screen == "cpi_weighted_items" then
-        renderWeightedCPIItems(gc)
-    elseif state.screen == "cpi_weighted_step1" then
-        renderWeightedCPIStep1(gc)
-    elseif state.screen == "cpi_weighted_step2" then
-        renderWeightedCPIStep2(gc)
-    elseif state.screen == "cpi_weighted_step3" then
-        renderWeightedCPIStep3(gc)
-    elseif state.screen == "cpi_fisher" then
-        renderFisher(gc)
     elseif state.screen == "cpi_inflation" then
         renderInflation(gc)
-    elseif state.screen == "cpi_real_income" then
-        renderRealIncome(gc)
-    elseif state.screen == "cpi_purchasing" then
-        renderPurchasingPower(gc)
-    elseif state.screen == "formulas" then
-        renderFormulas(gc)
     else
         drawTitle(gc, "In development")
         drawText(gc, "ESC to return", 10, 40, 9)
@@ -897,7 +485,7 @@ function on.arrowKey(key)
         end
         platform.window:invalidate()
     else
-        -- Horizontal scrolling for items (only for gdp_calc now)
+        -- Horizontal scrolling for items
         local totalItems = 0
         if state.screen == "gdp_calc" and state.inputs.gdp then
             totalItems = state.inputs.gdp.n
@@ -923,27 +511,13 @@ function on.arrowKey(key)
             maxFields = state.inputs.laspeyres.n
         elseif state.screen == "cpi_laspeyres_step3" and state.inputs.laspeyres then
             maxFields = state.inputs.laspeyres.n
-        elseif state.screen == "cpi_paasche_basket" and state.inputs.paasche then
-            maxFields = state.inputs.paasche.n
-        elseif state.screen == "cpi_paasche_step2" and state.inputs.paasche then
-            maxFields = state.inputs.paasche.n
-        elseif state.screen == "cpi_paasche_step3" and state.inputs.paasche then
-            maxFields = state.inputs.paasche.n
-        elseif state.screen == "cpi_weighted_step1" and state.inputs.cpi_weighted then
-            maxFields = state.inputs.cpi_weighted.n * 2
-        elseif state.screen == "cpi_weighted_step2" and state.inputs.cpi_weighted then
-            maxFields = state.inputs.cpi_weighted.n
-        elseif state.screen == "cpi_weighted_step3" and state.inputs.cpi_weighted then
-            maxFields = state.inputs.cpi_weighted.n
-        elseif state.screen == "cpi_purchasing" then
-            maxFields = 1
         end
 
         if key == "up" then
-            state.editBuffer = ""  -- Clear buffer when changing fields
+            state.editBuffer = ""
             state.selectedField = state.selectedField > 1 and state.selectedField - 1 or maxFields
         elseif key == "down" then
-            state.editBuffer = ""  -- Clear buffer when changing fields
+            state.editBuffer = ""
             state.selectedField = state.selectedField < maxFields and state.selectedField + 1 or 1
         end
         platform.window:invalidate()
@@ -951,12 +525,12 @@ function on.arrowKey(key)
 end
 
 function on.tabKey()
-    state.editBuffer = ""  -- Clear buffer when changing fields
+    state.editBuffer = ""
     on.arrowKey("down")
 end
 
 function on.enterKey()
-    state.editBuffer = ""  -- Clear buffer
+    state.editBuffer = ""
 
     if state.screen == "menu" then
         state.screen = mainMenu[state.selectedMenu].screen
@@ -974,7 +548,6 @@ function on.enterKey()
             state.result = nil
         end
     elseif state.screen == "gdp_calc_items" then
-        -- Create items array for GDP
         local n = state.inputs.gdp_items_count or 2
         if n == 0 or n > 5 then n = 2 end
         state.inputs.gdp = {n = n, items = {}}
@@ -985,7 +558,6 @@ function on.enterKey()
         state.selectedField = 1
         state.result = nil
     elseif state.screen == "cpi_laspeyres_items" then
-        -- Create basket structure
         local n = state.inputs.laspeyres_items_count or 2
         if n == 0 or n > 5 then n = 2 end
         state.inputs.laspeyres = {n = n, quantities = {}}
@@ -996,7 +568,6 @@ function on.enterKey()
         state.selectedField = 1
         state.result = nil
     elseif state.screen == "cpi_laspeyres_basket" then
-        -- Move to step 2: base prices
         local inp = state.inputs.laspeyres
         if inp then
             inp.prices_base = {}
@@ -1008,7 +579,6 @@ function on.enterKey()
             state.result = nil
         end
     elseif state.screen == "cpi_laspeyres_step2" then
-        -- Move to step 3: current prices
         local inp = state.inputs.laspeyres
         if inp then
             inp.prices_current = {}
@@ -1021,101 +591,20 @@ function on.enterKey()
         end
     elseif state.screen == "cpi_laspeyres_step3" then
         calculateLaspeyresCalc()
-    elseif state.screen == "cpi_paasche_items" then
-        -- Create basket structure for Paasche
-        local n = state.inputs.paasche_items_count or 2
-        if n == 0 or n > 5 then n = 2 end
-        state.inputs.paasche = {n = n, quantities = {}}
-        for i = 1, n do
-            state.inputs.paasche.quantities[i] = 0
-        end
-        state.screen = "cpi_paasche_basket"
-        state.selectedField = 1
-        state.result = nil
-    elseif state.screen == "cpi_paasche_basket" then
-        -- Move to step 2: base prices
-        local inp = state.inputs.paasche
-        if inp then
-            inp.prices_base = {}
-            for i = 1, inp.n do
-                inp.prices_base[i] = 0
-            end
-            state.screen = "cpi_paasche_step2"
-            state.selectedField = 1
-            state.result = nil
-        end
-    elseif state.screen == "cpi_paasche_step2" then
-        -- Move to step 3: current prices
-        local inp = state.inputs.paasche
-        if inp then
-            inp.prices_current = {}
-            for i = 1, inp.n do
-                inp.prices_current[i] = 0
-            end
-            state.screen = "cpi_paasche_step3"
-            state.selectedField = 1
-            state.result = nil
-        end
-    elseif state.screen == "cpi_paasche_step3" then
-        calculatePaascheCalc()
-    elseif state.screen == "cpi_weighted_items" then
-        -- Create data structure for weighted CPI
-        local n = state.inputs.cpi_weighted_items_count or 2
-        if n == 0 or n > 5 then n = 2 end
-        state.inputs.cpi_weighted = {n = n, q_system = {}, q_basket = {}}
-        for i = 1, n do
-            state.inputs.cpi_weighted.q_system[i] = 0
-            state.inputs.cpi_weighted.q_basket[i] = 0
-        end
-        state.screen = "cpi_weighted_step1"
-        state.selectedField = 1
-        state.result = nil
-    elseif state.screen == "cpi_weighted_step1" then
-        -- Move to step 2: base prices
-        local inp = state.inputs.cpi_weighted
-        if inp then
-            inp.prices_base = {}
-            for i = 1, inp.n do
-                inp.prices_base[i] = 0
-            end
-            state.screen = "cpi_weighted_step2"
-            state.selectedField = 1
-            state.result = nil
-        end
-    elseif state.screen == "cpi_weighted_step2" then
-        -- Move to step 3: current prices
-        local inp = state.inputs.cpi_weighted
-        if inp then
-            inp.prices_current = {}
-            for i = 1, inp.n do
-                inp.prices_current[i] = 0
-            end
-            state.screen = "cpi_weighted_step3"
-            state.selectedField = 1
-            state.result = nil
-        end
-    elseif state.screen == "cpi_weighted_step3" then
-        calculateWeightedCPICalc()
     elseif state.screen == "gdp_calc" then
         calculateGDPCalc()
     elseif state.screen == "gdp_deflator" then
         calculateGDPDeflator()
     elseif state.screen == "gdp_real" then
         calculateRealGDP()
-    elseif state.screen == "cpi_fisher" then
-        calculateFisherCalc()
     elseif state.screen == "cpi_inflation" then
         calculateInflationCalc()
-    elseif state.screen == "cpi_real_income" then
-        calculateRealIncomeCalc()
-    elseif state.screen == "cpi_purchasing" then
-        calculatePurchasingPowerCalc()
     end
     platform.window:invalidate()
 end
 
 function on.escapeKey()
-    state.editBuffer = ""  -- Clear buffer
+    state.editBuffer = ""
 
     if state.screen ~= "menu" then
         if state.screen == "gdp_calc_items" then
@@ -1128,24 +617,6 @@ function on.escapeKey()
             state.screen = "cpi_laspeyres_basket"
         elseif state.screen == "cpi_laspeyres_step3" then
             state.screen = "cpi_laspeyres_step2"
-        elseif state.screen == "cpi_paasche_items" then
-            state.screen = "cpi_menu"
-        elseif state.screen == "cpi_paasche_basket" then
-            state.screen = "cpi_paasche_items"
-        elseif state.screen == "cpi_paasche_step2" then
-            state.screen = "cpi_paasche_basket"
-        elseif state.screen == "cpi_paasche_step3" then
-            state.screen = "cpi_paasche_step2"
-        elseif state.screen == "cpi_weighted_items" then
-            state.screen = "cpi_menu"
-        elseif state.screen == "cpi_weighted_step1" then
-            state.screen = "cpi_weighted_items"
-        elseif state.screen == "cpi_weighted_step2" then
-            state.screen = "cpi_weighted_step1"
-        elseif state.screen == "cpi_weighted_step3" then
-            state.screen = "cpi_weighted_step2"
-        elseif state.screen == "formulas" then
-            state.screen = "menu"
         elseif state.screen:find("gdp") then
             state.screen = state.screen == "gdp_menu" and "menu" or "gdp_menu"
         elseif state.screen:find("cpi") then
@@ -1167,8 +638,6 @@ local function getCurrentFieldValue()
         return state.inputs.gdp_items_count or 2
     elseif state.screen == "cpi_laspeyres_items" then
         return state.inputs.laspeyres_items_count or 2
-    elseif state.screen == "cpi_paasche_items" then
-        return state.inputs.paasche_items_count or 2
     elseif state.screen == "gdp_calc" and state.inputs.gdp then
         local itemIdx = math.floor((f - 1) / 3) + 1
         local fieldIdx = (f - 1) % 3 + 1
@@ -1185,31 +654,8 @@ local function getCurrentFieldValue()
         return state.inputs.laspeyres.prices_base[f] or 0
     elseif state.screen == "cpi_laspeyres_step3" and state.inputs.laspeyres then
         return state.inputs.laspeyres.prices_current[f] or 0
-    elseif state.screen == "cpi_paasche_basket" and state.inputs.paasche then
-        return state.inputs.paasche.quantities[f] or 0
-    elseif state.screen == "cpi_paasche_step2" and state.inputs.paasche then
-        return state.inputs.paasche.prices_base[f] or 0
-    elseif state.screen == "cpi_paasche_step3" and state.inputs.paasche then
-        return state.inputs.paasche.prices_current[f] or 0
-    elseif state.screen == "cpi_weighted_items" then
-        return state.inputs.cpi_weighted_items_count or 2
-    elseif state.screen == "cpi_weighted_step1" and state.inputs.cpi_weighted then
-        local itemIdx = math.floor((f - 1) / 2) + 1
-        local fieldIdx = (f - 1) % 2 + 1
-        if fieldIdx == 1 then return state.inputs.cpi_weighted.q_system[itemIdx] or 0
-        else return state.inputs.cpi_weighted.q_basket[itemIdx] or 0 end
-    elseif state.screen == "cpi_weighted_step2" and state.inputs.cpi_weighted then
-        return state.inputs.cpi_weighted.prices_base[f] or 0
-    elseif state.screen == "cpi_weighted_step3" and state.inputs.cpi_weighted then
-        return state.inputs.cpi_weighted.prices_current[f] or 0
-    elseif state.screen == "cpi_fisher" and state.inputs.fisher then
-        return f == 1 and state.inputs.fisher.laspeyres or state.inputs.fisher.paasche
     elseif state.screen == "cpi_inflation" and state.inputs.inflation then
         return f == 1 and state.inputs.inflation.cpi_current or state.inputs.inflation.cpi_previous
-    elseif state.screen == "cpi_real_income" and state.inputs.real_income then
-        return f == 1 and state.inputs.real_income.nominal or state.inputs.real_income.cpi
-    elseif state.screen == "cpi_purchasing" and state.inputs.purchasing then
-        return state.inputs.purchasing.cpi
     end
     return 0
 end
@@ -1220,8 +666,6 @@ local function setCurrentFieldValue(value)
         state.inputs.gdp_items_count = tonumber(value) or 2
     elseif state.screen == "cpi_laspeyres_items" then
         state.inputs.laspeyres_items_count = tonumber(value) or 2
-    elseif state.screen == "cpi_paasche_items" then
-        state.inputs.paasche_items_count = tonumber(value) or 2
     elseif state.screen == "gdp_calc" and state.inputs.gdp then
         local itemIdx = math.floor((f - 1) / 3) + 1
         local fieldIdx = (f - 1) % 3 + 1
@@ -1240,34 +684,9 @@ local function setCurrentFieldValue(value)
         state.inputs.laspeyres.prices_base[f] = value
     elseif state.screen == "cpi_laspeyres_step3" and state.inputs.laspeyres then
         state.inputs.laspeyres.prices_current[f] = value
-    elseif state.screen == "cpi_paasche_basket" and state.inputs.paasche then
-        state.inputs.paasche.quantities[f] = value
-    elseif state.screen == "cpi_paasche_step2" and state.inputs.paasche then
-        state.inputs.paasche.prices_base[f] = value
-    elseif state.screen == "cpi_paasche_step3" and state.inputs.paasche then
-        state.inputs.paasche.prices_current[f] = value
-    elseif state.screen == "cpi_weighted_items" then
-        state.inputs.cpi_weighted_items_count = tonumber(value) or 2
-    elseif state.screen == "cpi_weighted_step1" and state.inputs.cpi_weighted then
-        local itemIdx = math.floor((f - 1) / 2) + 1
-        local fieldIdx = (f - 1) % 2 + 1
-        if fieldIdx == 1 then state.inputs.cpi_weighted.q_system[itemIdx] = value
-        else state.inputs.cpi_weighted.q_basket[itemIdx] = value end
-    elseif state.screen == "cpi_weighted_step2" and state.inputs.cpi_weighted then
-        state.inputs.cpi_weighted.prices_base[f] = value
-    elseif state.screen == "cpi_weighted_step3" and state.inputs.cpi_weighted then
-        state.inputs.cpi_weighted.prices_current[f] = value
-    elseif state.screen == "cpi_fisher" and state.inputs.fisher then
-        if f == 1 then state.inputs.fisher.laspeyres = value
-        else state.inputs.fisher.paasche = value end
     elseif state.screen == "cpi_inflation" and state.inputs.inflation then
         if f == 1 then state.inputs.inflation.cpi_current = value
         else state.inputs.inflation.cpi_previous = value end
-    elseif state.screen == "cpi_real_income" and state.inputs.real_income then
-        if f == 1 then state.inputs.real_income.nominal = value
-        else state.inputs.real_income.cpi = value end
-    elseif state.screen == "cpi_purchasing" and state.inputs.purchasing then
-        state.inputs.purchasing.cpi = value
     end
 end
 
@@ -1275,16 +694,13 @@ function on.charIn(char)
     if state.screen:find("_menu") or state.screen == "menu" then return end
 
     if tonumber(char) or char == "." or char == "-" then
-        -- Initialize buffer if empty
         if state.editBuffer == "" then
             local current = getCurrentFieldValue()
             state.editBuffer = (current == 0) and "" or tostring(current)
         end
 
-        -- Add character
         state.editBuffer = state.editBuffer .. char
 
-        -- Try to convert and store
         local newValue = tonumber(state.editBuffer)
         if newValue then
             setCurrentFieldValue(newValue)
