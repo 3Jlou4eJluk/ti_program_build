@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?><prob xmlns="urn:TI.Problem" ver="1.0"><sym><e t="6" f="65536"><n>version</n><p></p><v>Func&#13;:©version(): returns library version&#13;:Return "1.0.0"&#13;:EndFunc</v></e><e t="6" f="65536"><n>gdp_r</n><p>c,i,g,x,m</p><v>Func&#13;:©gdp_r(c,i,g,x,m): GDP by expenditure approach&#13;:Return c+i+g+x-m&#13;:EndFunc</v></e><e t="6" f="65536"><n>ds</n><p>vyp,pp</p><v>Func&#13;:©ds(vyp,pp): added value (value added)&#13;:Return vyp-pp&#13;:EndFunc</v></e><e t="6" f="65536"><n>profit</n><p>vyr,syr,zp</p><v>Func&#13;:©profit(vyr,syr,zp): firm profit&#13;:Return vyr-syr-zp&#13;:EndFunc</v></e><e t="6" f="65536"><n>cpi</n><p>pn,p0,q</p><v>Func&#13;:©cpi(pn,p0,q): CPI Laspeyres index&#13;:Return sum(pn*q)/sum(p0*q)*100&#13;:EndFunc</v></e><e t="6" f="65536"><n>infl</n><p>cpi1,cpi0</p><v>Func&#13;:©infl(cpi1,cpi0): inflation rate&#13;:Return (cpi1-cpi0)/cpi0*100&#13;:EndFunc</v></e><e t="6" f="65536"><n>defl</n><p>nom,real</p><v>Func&#13;:©defl(nom,real): GDP deflator&#13;:Return nom/real*100&#13;:EndFunc</v></e><e t="6" f="65536"><n>rgdp</n><p>nom,def</p><v>Func&#13;:©rgdp(nom,def): real GDP from nominal and deflator&#13;:Return nom/def*100&#13;:EndFunc</v></e><e t="6" f="65536"><n>fisher</n><p>lasp,paas</p><v>Func&#13;:©fisher(lasp,paas): Fisher price index&#13;:Return sqrt(lasp*paas)&#13;:EndFunc</v></e><e t="6" f="65536"><n>rinc</n><p>nom,cpi</p><v>Func&#13;:©rinc(nom,cpi): real income adjusted for inflation&#13;:Return nom/(cpi/100)&#13;:EndFunc</v></e><e t="6" f="65536"><n>pp</n><p>cpi</p><v>Func&#13;:©pp(cpi): purchasing power of currency&#13;:Return 100/cpi&#13;:EndFunc</v></e></sym><card clay="0" h1="10000" h2="10000" w1="10000" w2="10000"><flag>0</flag><wdgt xmlns:np="urn:TI.Notepad" type="TI.Notepad" ver="1.0"><np:mFlags>0</np:mFlags><np:value>3</np:value><np:txt>\1keyword gdp_other\  \1keyword library\  \1keyword -\  \1keyword version\  \1keyword 1.0.0\
+     2→\1subhead GDP\  \1subhead and\  \1subhead CPI\  \1subhead Formulas\
+     3→\1subhead \
+     4→\1keyword How\  \1keyword to\  \1keyword use\  \1keyword this\  \1keyword library\
+     5→To use a function from this library, follow these steps:
+     6→1. Make sure the library document \1keyword gdp_other\  is in the \1keyword MyLib\  folder.
+     7→2. Press \1keyword [ctrl]\  \1keyword [home]\  and select \1keyword Refresh\  \1keyword Libraries\ .
+     8→3. Open the Calculator application.
+     9→4. Open the Catalog and use the library tab to find and insert the object.
+    10→    - or -
+    11→    Type the name of the object, such as \0el {gdp_other\gdp_r(100,50,30,40,20)}. To type the "\" character on the handheld, press [CAPS] [÷].
+    12→5. If arguments are required, type them inside the parentheses.
+    13→    For example, \0el {gdp_other\cpi({5,10,10.5},{1,1,1.05},{5,3,3})}
+    14→</np:txt></wdgt></card><card clay="0" h1="10000" h2="10000" w1="10000" w2="10000"><flag>0</flag><wdgt xmlns:np="urn:TI.Notepad" type="TI.Notepad" ver="1.0"><np:mFlags>0</np:mFlags><np:value>3</np:value><np:txt>\1keyword gdp_other\  \1keyword library\  \1keyword -\  \1keyword version\  \1keyword 1.0.0\
+    15→======================
+    16→\1keyword TABLE\  \1keyword OF\  \1keyword CONTENTS\
+    17→\1keyword \
+    18→\1title Public\  \1title functions\
+    19→\1title \
+    20→\0el {version()} - returns library version
+    21→    Returns: \0el {"1.0.0"}
+    22→    Example: \0el {gdp_other\version()}
+    23→
+    24→\0el {gdp_r(c,i,g,x,m)} - GDP by expenditure approach
+    25→    Formula: GDP = C + I + G + X - M
+    26→    Parameters:
+    27→      \1keyword c\  - consumption
+    28→      \1keyword i\  - investment
+    29→      \1keyword g\  - government spending
+    30→      \1keyword x\  - exports
+    31→      \1keyword m\  - imports
+    32→    Example: \0el {gdp_other\gdp_r(100,50,30,40,20)} → 200
+    33→
+    34→\0el {ds(vyp,pp)} - added value (value added)
+    35→    Formula: DS = Output - Intermediate consumption
+    36→    Parameters:
+    37→      \1keyword vyp\  - gross output (revenue)
+    38→      \1keyword pp\  - intermediate consumption
+    39→    Example: \0el {gdp_other\ds(1000,600)} → 400
+    40→
+    41→\0el {profit(vyr,syr,zp)} - firm profit
+    42→    Formula: Profit = Revenue - Costs - Wages
+    43→    Parameters:
+    44→      \1keyword vyr\  - revenue
+    45→      \1keyword syr\  - costs
+    46→      \1keyword zp\  - wages
+    47→    Example: \0el {gdp_other\profit(1000,600,200)} → 200
+    48→
+    49→\0el {cpi(pn,p0,q)} - CPI Laspeyres index
+    50→    Formula: CPI = (SUM(pn*q) / SUM(p0*q)) * 100
+    51→    Parameters:
+    52→      \1keyword pn\  - list of current prices
+    53→      \1keyword p0\  - list of base year prices
+    54→      \1keyword q\  - list of base year quantities
+    55→    Example: \0el {gdp_other\cpi({5,10,10.5},{1,1,1.05},{5,3,3})} → 500
+    56→
+    57→\0el {infl(cpi1,cpi0)} - inflation rate
+    58→    Formula: Inflation = ((CPI1 - CPI0) / CPI0) * 100%
+    59→    Parameters:
+    60→      \1keyword cpi1\  - current period CPI
+    61→      \1keyword cpi0\  - base period CPI
+    62→    Example: \0el {gdp_other\infl(110,100)} → 10
+    63→
+    64→\0el {defl(nom,real)} - GDP deflator
+    65→    Formula: Deflator = (GDP_nominal / GDP_real) * 100
+    66→    Parameters:
+    67→      \1keyword nom\  - nominal GDP
+    68→      \1keyword real\  - real GDP
+    69→    Example: \0el {gdp_other\defl(110,100)} → 110
+    70→
+    71→\0el {rgdp(nom,def)} - real GDP
+    72→    Formula: GDP_real = (GDP_nominal / Deflator) * 100
+    73→    Parameters:
+    74→      \1keyword nom\  - nominal GDP
+    75→      \1keyword def\  - GDP deflator
+    76→    Example: \0el {gdp_other\rgdp(110,110)} → 100
+    77→
+    78→\0el {fisher(lasp,paas)} - Fisher price index
+    79→    Formula: I_F = SQRT(Laspeyres * Paasche)
+    80→    Parameters:
+    81→      \1keyword lasp\  - Laspeyres index
+    82→      \1keyword paas\  - Paasche index
+    83→    Example: \0el {gdp_other\fisher(110,105)} → 107.47
+    84→
+    85→\0el {rinc(nom,cpi)} - real income
+    86→    Formula: Real Income = Nominal / (CPI/100)
+    87→    Parameters:
+    88→      \1keyword nom\  - nominal income
+    89→      \1keyword cpi\  - CPI index
+    90→    Example: \0el {gdp_other\rinc(1000,110)} → 909.09
+    91→
+    92→\0el {pp(cpi)} - purchasing power
+    93→    Formula: PP = 100 / CPI
+    94→    Parameters:
+    95→      \1keyword cpi\  - CPI index
+    96→    Example: \0el {gdp_other\pp(110)} → 0.909
+    97→</np:txt></wdgt></card></prob>
