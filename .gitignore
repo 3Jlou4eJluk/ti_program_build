@@ -1,0 +1,30 @@
+# Build artifacts
+build/*.tns
+!build/.gitkeep
+
+# Luna repository (external tool)
+tools/Luna/
+
+# Editor and IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Claude settings (keep local only)
+.claude/
+
+# Temporary files
+*.tmp
+*.bak
+*.orig
+
+# Compiled objects
+*.o
+*.a
+*.so

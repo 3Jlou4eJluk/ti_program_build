@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?><prob xmlns="urn:TI.Problem" ver="1.0"><sym><e t="6" f="65536"><n>version</n><p></p><v>Func&#13;:Return "1.0.0"&#13;:EndFunc</v></e><e t="6" f="196608"><n>sum_prod</n><p>list1,list2</p><v>Func&#13;:Local i,s&#13;:If dim(list1)≠dim(list2) Then&#13;: Return undef&#13;:EndIf&#13;:0→s&#13;:For i,1,dim(list1)&#13;: s+list1[i]*list2[i]→s&#13;:EndFor&#13;:Return s&#13;:EndFunc</v></e><e t="6" f="65536"><n>nominal_gdp</n><p>prices,quantities</p><v>Func&#13;:If dim(prices)≠dim(quantities) Then&#13;: Return undef&#13;:EndIf&#13;:Return sum_prod(prices,quantities)&#13;:EndFunc</v></e><e t="6" f="65536"><n>real_gdp</n><p>base_prices,quantities</p><v>Func&#13;:If dim(base_prices)≠dim(quantities) Then&#13;: Return undef&#13;:EndIf&#13;:Return sum_prod(base_prices,quantities)&#13;:EndFunc</v></e><e t="6" f="65536"><n>gdp_deflator</n><p>nominal,real</p><v>Func&#13;:If real=0 Then&#13;: Return undef&#13;:EndIf&#13;:Return (nominal/real)*100&#13;:EndFunc</v></e><e t="6" f="65536"><n>cpi</n><p>cost_current,cost_base</p><v>Func&#13;:If cost_base=0 Then&#13;: Return undef&#13;:EndIf&#13;:Return (cost_current/cost_base)*100&#13;:EndFunc</v></e><e t="6" f="65536"><n>inflation_rate</n><p>cpi_current,cpi_previous</p><v>Func&#13;:If cpi_previous=0 Then&#13;: Return undef&#13;:EndIf&#13;:Return ((cpi_current-cpi_previous)/cpi_previous)*100&#13;:EndFunc</v></e><e t="6" f="65536"><n>basket_cost</n><p>prices,quantities</p><v>Func&#13;:If dim(prices)≠dim(quantities) Then&#13;: Return undef&#13;:EndIf&#13;:Return sum_prod(prices,quantities)&#13;:EndFunc</v></e><e t="6" f="65536"><n>cpi_from_baskets</n><p>p_current,p_base,quantities</p><v>Func&#13;:Local cost_cur,cost_base&#13;:If dim(p_current)≠dim(quantities) or dim(p_base)≠dim(quantities) Then&#13;: Return undef&#13;:EndIf&#13;:sum_prod(p_current,quantities)→cost_cur&#13;:sum_prod(p_base,quantities)→cost_base&#13;:If cost_base=0 Then&#13;: Return undef&#13;:EndIf&#13;:Return (cost_cur/cost_base)*100&#13;:EndFunc</v></e><e t="6" f="65536"><n>growth_rate</n><p>old_value,new_value</p><v>Func&#13;:If old_value=0 Then&#13;: Return undef&#13;:EndIf&#13;:Return ((new_value-old_value)/old_value)*100&#13;:EndFunc</v></e><e t="7" f="65536"><n>help</n><p></p><v>Prgm&#13;:Disp "econ library v1.0.0"&#13;:Disp "Functions:"&#13;:Disp "nominal_gdp(prices,quantities)"&#13;:Disp "real_gdp(base_prices,quantities)"&#13;:Disp "gdp_deflator(nominal,real)"&#13;:Disp "cpi(cost_current,cost_base)"&#13;:Disp "inflation_rate(cpi1,cpi0)"&#13;:Disp "basket_cost(prices,quantities)"&#13;:Disp "cpi_from_baskets(pc,pb,q)"&#13;:Disp "growth_rate(old,new)"&#13;:EndPrgm</v></e></sym><card clay="0" h1="10000" h2="10000" w1="10000" w2="10000"><flag>0</flag><wdgt xmlns:np="urn:TI.Notepad" type="TI.Notepad" ver="1.0"><np:mFlags>0</np:mFlags><np:value>3</np:value><np:txt>\1title econ Economic Formulas Library
+\1subhead Version 1.0.0
+
+\1keyword Functions:
+
+\0el {econ\nominal_gdp(prices, quantities)}
+  Calculates Nominal GDP
+  Example: econ\nominal_gdp({10,12.5,3},{3,4,2})
+
+\0el {econ\real_gdp(base_prices, quantities)}
+  Calculates Real GDP
+  Example: econ\real_gdp({9,11,2.5},{3,4,2})
+
+\0el {econ\gdp_deflator(nominal, real)}
+  Calculates GDP Deflator
+  Example: econ\gdp_deflator(12345,10000)
+
+\0el {econ\cpi(cost_current, cost_base)}
+  Calculates CPI
+  Example: econ\cpi(250,200)
+
+\0el {econ\inflation_rate(cpi_current, cpi_previous)}
+  Calculates Inflation Rate
+  Example: econ\inflation_rate(125,120)
+
+\0el {econ\basket_cost(prices, quantities)}
+  Calculates Basket Cost
+  Example: econ\basket_cost({10,20,30},{2,3,1})
+
+\0el {econ\cpi_from_baskets(p_current, p_base, quantities)}
+  Calculates CPI from price baskets
+  Example: econ\cpi_from_baskets({10,20},{9,18},{5,3})
+
+\0el {econ\growth_rate(old_value, new_value)}
+  Calculates Growth Rate
+  Example: econ\growth_rate(1000,1100)
+
+\1keyword Usage:
+1. Place econ.tns in MyLib folder
+2. Press ctrl+home and select Refresh Libraries
+3. Access functions via Catalog or type econ\function_name
+
+\1keyword Notes:
+All functions return undef on error
+Lists must have equal dimensions when paired
+Use curly braces for list literals
+</np:txt></wdgt></card></prob>
