@@ -9,7 +9,8 @@ local state = {
     inputs = {},
     result = nil,
     editBuffer = "",
-    itemsOffset = 0
+    itemsOffset = 0,
+    scrollOffset = 0
 }
 
 -- Screen dimensions
@@ -18,7 +19,10 @@ local sw, sh = 318, 212
 -- Main menu
 local mainMenu = {
     {title = "1. GDP & Deflator", screen = "gdp_menu"},
-    {title = "2. CPI & Inflation", screen = "cpi_menu"}
+    {title = "2. CPI & Inflation", screen = "cpi_menu"},
+    {title = "3. GDP Methods Guide", screen = "gdp_methods_guide"},
+    {title = "4. CPI Formulas Guide", screen = "cpi_formulas_guide"},
+    {title = "5. Neoclassical Utility", screen = "neoclassical_utility"}
 }
 
 -- GDP submenu
@@ -424,6 +428,195 @@ local function calculateInflationCalc()
 end
 
 --=====================================
+-- GDP METHODS GUIDE
+--=====================================
+
+local function renderGDPMethodsGuide(gc)
+    drawTitle(gc, "GDP Methods Guide")
+
+    local content = {
+        {text = "OBSHIE PRAVILA:", bold = true},
+        {text = "1. Vse po rynochnym cenam"},
+        {text = "2. Zapasy na konec = +I"},
+        {text = "3. Export(+), Import(-)"},
+        {text = "4. Zarplata v dohodah"},
+        {text = " "},
+        {text = "METHOD 1: PO DS", bold = true},
+        {text = "GDP = DS1 + DS2 + ..."},
+        {text = "DS = Vyruchka + dZ*P - Prom.zatr"},
+        {text = " "},
+        {text = "METHOD 2: PO RASHODAM", bold = true},
+        {text = "GDP = C + I + NX"},
+        {text = "C = rashody, I = +zapasy*P"},
+        {text = "NX = Export - Import"},
+        {text = " "},
+        {text = "METHOD 3: PO DOHODAM", bold = true},
+        {text = "GDP = ZP + Pribyl"},
+        {text = "Prib = Vyr+dZ*P-Syryo-ZP"},
+        {text = " "},
+        {text = "--- POYASNENIYA ---", bold = true},
+        {text = "DS - dobavlennaya stoimost"},
+        {text = "Vyr - vyruchka"},
+        {text = "dZ - prirost zapasov"},
+        {text = "P - cena"},
+        {text = "Prom.zatr - promezhut.zatraty"},
+        {text = "C - rashody (consumption)"},
+        {text = "I - investicii (zapasy)"},
+        {text = "NX - chistyi export"},
+        {text = "ZP - zarplata"},
+        {text = "Prib - pribyl"},
+        {text = "Syryo - zatraty na syryo"}
+    }
+
+    local lineHeight = 10
+    local startY = 25
+    local visibleLines = math.floor((sh - startY - 25) / lineHeight)
+
+    local y = startY
+    for i = state.scrollOffset + 1, math.min(#content, state.scrollOffset + visibleLines) do
+        local line = content[i]
+        drawText(gc, line.text, 5, y, 7, line.bold)
+        y = y + lineHeight
+    end
+
+    local scrollInfo = string.format("Line %d/%d - Use ^v to scroll",
+        state.scrollOffset + 1, #content)
+    drawText(gc, scrollInfo, 5, sh - 20, 7)
+    drawText(gc, "ESC to return", 5, sh - 10, 7)
+end
+
+local function renderCPIFormulasGuide(gc)
+    drawTitle(gc, "CPI Formulas Guide (Laspeyres)")
+
+    local content = {
+        {text = "FORMULY IPC", bold = true},
+        {text = "(Laspeyres, baza god 0)", bold = true},
+        {text = " "},
+        {text = "1. STOIMOST KORZINY v godu t:", bold = true},
+        {text = "Sum(p_i_t * q_i_0) dlya vseh i"},
+        {text = "p_i_t - cena tovara i v godu t"},
+        {text = "q_i_0 - kolichestvo v baze 0"},
+        {text = " "},
+        {text = "2. IPC_t (baza god 0 = 100):", bold = true},
+        {text = "IPC_t = [Sum(p_i_t*q_i_0) /"},
+        {text = "         Sum(p_i_0*q_i_0)] * 100"},
+        {text = " "},
+        {text = "Primer:", bold = true},
+        {text = "God 0: p=[10,20], q=[5,3]"},
+        {text = "God 1: p=[12,22]"},
+        {text = "IPC_0 = 100 (baza)"},
+        {text = "Korzina_0 = 10*5+20*3 = 110"},
+        {text = "Korzina_1 = 12*5+22*3 = 126"},
+        {text = "IPC_1 = (126/110)*100 = 114.5"},
+        {text = " "},
+        {text = "3. GODOVAYA INFLYACIYA:", bold = true},
+        {text = "pi = (IPC_{t+1}/IPC_t - 1)*100%"},
+        {text = " "},
+        {text = "Primer (prodolzhenie):", bold = true},
+        {text = "pi = (114.5/100 - 1)*100"},
+        {text = "   = 14.5% inflyaciya"},
+        {text = " "},
+        {text = "4. SMENA BAZY na god b:", bold = true},
+        {text = "IPC_t(nov) = (IPC_t(star) /"},
+        {text = "              IPC_b(star))*100"},
+        {text = " "},
+        {text = "Primer:", bold = true},
+        {text = "IPC_2010=110, IPC_2015=130"},
+        {text = "IPC_2020=150 (baza 2010)"},
+        {text = "Perebazirovat na 2015:"},
+        {text = "IPC_2020(nov) = (150/130)*100"},
+        {text = "              = 115.4"},
+        {text = " "},
+        {text = "--- POYASNENIYA ---", bold = true},
+        {text = "IPC - Indeks Potreb.Cen (CPI)"},
+        {text = "p_i_t - cena tovara i v god t"},
+        {text = "q_i_0 - kol-vo baz.goda"},
+        {text = "pi - inflyaciya (%)"},
+        {text = "Sum - summa po vsem tovaram"},
+        {text = "Baza - bazovyi god (=100)"}
+    }
+
+    local lineHeight = 10
+    local startY = 25
+    local visibleLines = math.floor((sh - startY - 25) / lineHeight)
+
+    local y = startY
+    for i = state.scrollOffset + 1, math.min(#content, state.scrollOffset + visibleLines) do
+        local line = content[i]
+        drawText(gc, line.text, 5, y, 7, line.bold)
+        y = y + lineHeight
+    end
+
+    local scrollInfo = string.format("Line %d/%d - Use ^v to scroll",
+        state.scrollOffset + 1, #content)
+    drawText(gc, scrollInfo, 5, sh - 20, 7)
+    drawText(gc, "ESC to return", 5, sh - 10, 7)
+end
+
+local function renderNeoclassicalUtility(gc)
+    drawTitle(gc, "Neoclassical Utility Function")
+
+    local content = {
+        {text = "DEFINITION:", bold = true},
+        {text = "u(x): Neoclassical utility function"},
+        {text = " "},
+        {text = "CONDITIONS:", bold = true},
+        {text = "1) Defined on X = R^n_+ (non-negative)"},
+        {text = " "},
+        {text = "2) Twice differentiable"},
+        {text = " "},
+        {text = "3) Strictly concave (Hessian matrix"},
+        {text = "   is negative definite for all X)"},
+        {text = "   => Law of diminishing marginal utility"},
+        {text = " "},
+        {text = "4) Positive marginal utility:", bold = true},
+        {text = "   du/dx_i > 0, i = 1,...,n"},
+        {text = " "},
+        {text = "5) Boundary conditions:", bold = true},
+        {text = "   lim (x_i->0) du/dx_i = infinity"},
+        {text = "   lim (x_i->inf) du/dx_i = 0"},
+        {text = "   for all i = 1,...,n"},
+        {text = " "},
+        {text = "--- MATHEMATICS ---", bold = true},
+        {text = " "},
+        {text = "First differential:", bold = true},
+        {text = "U'(x,y,z) = du/dx + du/dy + du/dz"},
+        {text = " "},
+        {text = "Second differential:", bold = true},
+        {text = "U'' = d^2u/dx^2 + d^2u/dy^2 +"},
+        {text = "      d^2u/dz^2 + 2*d^2u/dxdy +"},
+        {text = "      2*d^2u/dxdz + 2*d^2u/dydz"},
+        {text = " "},
+        {text = "Hessian matrix (negative definite):"},
+        {text = "H = [d^2u/dx^2    d^2u/dxdy   ...]"},
+        {text = "    [d^2u/dydx    d^2u/dy^2   ...]"},
+        {text = "    [   ...          ...      ...]"},
+        {text = " "},
+        {text = "--- POYASNENIYA ---", bold = true},
+        {text = "u(x) - funktsiya poleznosti"},
+        {text = "R^n_+ - neotritsatelnye chisla"},
+        {text = "du/dx_i - predelnaya poleznost"},
+        {text = "Gessian - matritsa vtorykh proizvod."}
+    }
+
+    local lineHeight = 10
+    local startY = 25
+    local visibleLines = math.floor((sh - startY - 25) / lineHeight)
+
+    local y = startY
+    for i = state.scrollOffset + 1, math.min(#content, state.scrollOffset + visibleLines) do
+        local line = content[i]
+        drawText(gc, line.text, 5, y, 7, line.bold)
+        y = y + lineHeight
+    end
+
+    local scrollInfo = string.format("Line %d/%d - Use ^v to scroll",
+        state.scrollOffset + 1, #content)
+    drawText(gc, scrollInfo, 5, sh - 20, 7)
+    drawText(gc, "ESC to return", 5, sh - 10, 7)
+end
+
+--=====================================
 -- MAIN RENDERING
 --=====================================
 
@@ -455,6 +648,12 @@ function on.paint(gc)
         renderLaspeyresStep3(gc)
     elseif state.screen == "cpi_inflation" then
         renderInflation(gc)
+    elseif state.screen == "gdp_methods_guide" then
+        renderGDPMethodsGuide(gc)
+    elseif state.screen == "cpi_formulas_guide" then
+        renderCPIFormulasGuide(gc)
+    elseif state.screen == "neoclassical_utility" then
+        renderNeoclassicalUtility(gc)
     else
         drawTitle(gc, "In development")
         drawText(gc, "ESC to return", 10, 40, 9)
@@ -484,6 +683,33 @@ function on.arrowKey(key)
             state.selectedMenu = state.selectedMenu < #currentMenu and state.selectedMenu + 1 or 1
         end
         platform.window:invalidate()
+    elseif state.screen == "gdp_methods_guide" then
+        local maxLines = 31
+        if key == "up" then
+            state.scrollOffset = math.max(0, state.scrollOffset - 1)
+            platform.window:invalidate()
+        elseif key == "down" then
+            state.scrollOffset = math.min(maxLines - 15, state.scrollOffset + 1)
+            platform.window:invalidate()
+        end
+    elseif state.screen == "cpi_formulas_guide" then
+        local maxLines = 46
+        if key == "up" then
+            state.scrollOffset = math.max(0, state.scrollOffset - 1)
+            platform.window:invalidate()
+        elseif key == "down" then
+            state.scrollOffset = math.min(maxLines - 15, state.scrollOffset + 1)
+            platform.window:invalidate()
+        end
+    elseif state.screen == "neoclassical_utility" then
+        local maxLines = 40
+        if key == "up" then
+            state.scrollOffset = math.max(0, state.scrollOffset - 1)
+            platform.window:invalidate()
+        elseif key == "down" then
+            state.scrollOffset = math.min(maxLines - 15, state.scrollOffset + 1)
+            platform.window:invalidate()
+        end
     else
         -- Horizontal scrolling for items
         local totalItems = 0
@@ -537,6 +763,7 @@ function on.enterKey()
         state.selectedMenu = 1
         state.selectedField = 1
         state.result = nil
+        state.scrollOffset = 0
     elseif state.screen:find("_menu") then
         local targetScreen = nil
         if state.screen == "gdp_menu" then targetScreen = gdpMenu[state.selectedMenu].screen
@@ -617,6 +844,15 @@ function on.escapeKey()
             state.screen = "cpi_laspeyres_basket"
         elseif state.screen == "cpi_laspeyres_step3" then
             state.screen = "cpi_laspeyres_step2"
+        elseif state.screen == "gdp_methods_guide" then
+            state.screen = "menu"
+            state.scrollOffset = 0
+        elseif state.screen == "cpi_formulas_guide" then
+            state.screen = "menu"
+            state.scrollOffset = 0
+        elseif state.screen == "neoclassical_utility" then
+            state.screen = "menu"
+            state.scrollOffset = 0
         elseif state.screen:find("gdp") then
             state.screen = state.screen == "gdp_menu" and "menu" or "gdp_menu"
         elseif state.screen:find("cpi") then

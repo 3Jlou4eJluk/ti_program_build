@@ -32,7 +32,7 @@ echo "Output: $OUTPUT_FILE"
 echo ""
 
 # Build using Luna
-./tools/Luna/luna "$LUA_FILE" "$OUTPUT_FILE"
+../Luna/luna "$LUA_FILE" "$OUTPUT_FILE"
 
 echo ""
 echo "✓ Build successful: $OUTPUT_FILE"

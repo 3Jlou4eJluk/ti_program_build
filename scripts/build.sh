@@ -16,7 +16,7 @@ fi
 LIB_NAME=$1
 LIB_DIR="libs/$LIB_NAME"
 BUILD_DIR="build"
-LUNA="tools/Luna/luna"
+LUNA="../Luna/luna"
 
 # Check if library exists
 if [ ! -d "$LIB_DIR" ]; then
@@ -40,7 +40,7 @@ fi
 # Check if Luna exists
 if [ ! -f "$LUNA" ]; then
     echo "Error: Luna not found at $LUNA"
-    echo "Please build Luna first: cd tools/Luna && make"
+    echo "Please build Luna first: cd ../Luna && make"
     exit 1
 fi
 
