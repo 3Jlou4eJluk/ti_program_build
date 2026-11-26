@@ -39,22 +39,45 @@ def build(luna, name, symbols, pages):
         subprocess.run([luna, 'Document.xml', 'Problem1.xml', f'{name}.tns'], cwd=wd, check=True)
         os.replace(wd / f'{name}.tns', output / f'{name}.tns')
 
-def handbook_source():
-    cards = []
-    for path in sorted((ROOT / 'guide').glob('*.json')):
+def read_cards():
+    guide_dir = ROOT / 'guide'
+    # Keep exam walkthroughs ahead of the supplementary topics.
+    paths = sorted(guide_dir.glob('*.json'), key=lambda path: (path.stem == 'walk_course', path.name))
+    for path in paths:
         for card in json.loads(path.read_text(encoding='utf-8')):
-            if card['section'] not in ('theory', 'practice'):
+            if card['section'] not in ('theory', 'practice', 'guide'):
                 raise ValueError(f'{path}: invalid section')
-            fields = []
-            for key in ('section', 'title', 'tags', 'body'):
-                value = card[key].strip()
-                if not value:
-                    raise ValueError(f'{path}: empty {key}')
-                fields.append(key + '=' + json.dumps(value, ensure_ascii=False))
-            scope = {'extra': 'Расширение курса',
-                     'connections': 'Расширение курса'}.get(path.stem, 'Тема с фото')
-            fields.append('scope=' + json.dumps(scope, ensure_ascii=False))
-            cards.append('{' + ','.join(fields) + '}')
+            fields = {key: card[key].strip() for key in ('section', 'title', 'tags', 'body')}
+            if not all(fields.values()):
+                raise ValueError(f'{path}: empty card field')
+            if fields['section'] == 'guide':
+                fields['scope'] = 'Пошаговый разбор'
+            else:
+                fields['scope'] = ('Расширение курса' if path.stem in ('extra', 'connections')
+                                   else 'Тема с фото')
+            yield fields
+
+
+def walkthrough_markdown():
+    cards = [card for card in read_cards() if card['section'] == 'guide']
+    if not cards:
+        raise ValueError('The walkthrough section is empty')
+    lines = ['# Эконометрика. Как решать задачи', '',
+             'Выбери разбор по данным в условии. В каждом есть промежуточные вычисления и вывод, который можно записать в работе.', '']
+    for i, card in enumerate(cards, 1):
+        lines.append(f"{i}. [{card['title']}](#task-{i})")
+    for i, card in enumerate(cards, 1):
+        lines.extend(['', f'<a id="task-{i}"></a>', '', f"## {card['title']}"])
+        for paragraph in card['body'].split('\n\n'):
+            rows = [row.strip().replace('*', r'\*') for row in paragraph.splitlines()]
+            lines.extend(['', '<br>\n'.join(rows)])
+    return '\n'.join(lines) + '\n'
+
+
+def handbook_source():
+    cards = ['{' + ','.join(key + '=' + json.dumps(value, ensure_ascii=False)
+                             for key, value in card.items()) + '}'
+             for card in read_cards()]
     template = (ROOT / 'handbook.lua').read_text(encoding='utf-8')
     font = (ROOT / 'font.lua').read_text(encoding='utf-8')
     return ('local CARDS = {\n' + ',\n'.join(cards) + '\n}\n'
@@ -65,7 +88,11 @@ def package():
     output = ROOT / 'build'
     with tempfile.TemporaryDirectory(dir=output) as wd:
         archive = Path(wd) / 'econometrics-cx-ii-t.zip'
+        guide_name = 'how-to-solve.ru.md'
+        guide_path = Path(wd) / guide_name
+        guide_path.write_text(walkthrough_markdown(), encoding='utf-8')
         with ZipFile(archive, 'w', ZIP_DEFLATED) as bundle:
+            bundle.write(guide_path, guide_name)
             bundle.write(output / 'krguide.tns', 'krguide.tns')
             for source in sorted((ROOT / 'libs').glob('kr*.py')):
                 filename = source.stem + '.tns'
@@ -73,6 +100,7 @@ def package():
             for source in [*sorted(ROOT.glob('README*.md')), *sorted((ROOT / 'guide').rglob('*.md')),
                            *sorted(ROOT.glob('*LICENSE*'))]:
                 bundle.write(source, source.relative_to(ROOT))
+        os.replace(guide_path, output / guide_name)
         os.replace(archive, output / archive.name)
 
 

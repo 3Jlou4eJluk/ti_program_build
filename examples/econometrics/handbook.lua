@@ -1,5 +1,13 @@
 -- CARDS and BITMAPS are included at build time.
-local section, query, selected, open, offset = "theory", "", 1, false, 0
+local sections = {
+    {id = "theory", title = "Теория"},
+    {id = "practice", title = "Практика"},
+    {id = "guide", title = "Как решать"},
+}
+local sectionTitles = {}
+for i, item in ipairs(sections) do sectionTitles[i] = item.title end
+local sectionHint = "← → / Tab  "..table.concat(sectionTitles, " · ")
+local section, query, selected, open, offset = 1, "", 1, false, 0
 local matches, lines, lastWidth, maxOffset, pageSize = {}, {}, 0, 0, 6
 local examples, copyIndex = {}, 0
 local helping, cardOffset = false, 0
@@ -117,6 +125,7 @@ end
 local function refresh()
     matches, selected, offset, open, helping = {}, 1, 0, false, false
     local terms = {}
+    local sectionId = sections[section].id
     local input = query:gsub("[-/]", " "):gsub("–", " "):gsub("—", " ")
     for token in input:gmatch("%S+") do
         local exact = indexText(token)
@@ -125,7 +134,7 @@ local function refresh()
         terms[#terms+1] = {exact, alias ~= exact and alias ~= "" and alias or nil}
     end
     for _, card in ipairs(CARDS) do
-        if card.section == section then
+        if card.section == sectionId then
             local rank = searchRank(card, terms)
             if rank then
                 card.rank = rank
@@ -213,7 +222,7 @@ function on.paint(gc)
     gc:setColorRGB(255,255,255); gc:fillRect(0,0,w,h)
     gc:setColorRGB(26,58,78); gc:fillRect(0,0,w,22)
     gc:setColorRGB(255,255,255)
-    local label = section=="theory" and "Теория" or "Практика"
+    local label = sections[section].title
     local title = helping and "Как выполнить вызов" or (open and item.title or label.."  ·  "..#matches)
     drawText(gc, fit(title, w-10), 5, 4)
     gc:setColorRGB(16,34,43)
@@ -240,10 +249,11 @@ function on.paint(gc)
         end
     else
         drawText(gc, fit("Поиск: "..query, w-10), 5, 23)
-        pageSize = math.max(1,math.floor((h-45-step)/step))
+        local firstY, footerY = 25+step, h-15-step
+        pageSize = math.max(1,math.floor((footerY-firstY)/step))
         local first = math.max(1,selected-pageSize+1)
         for j=first,math.min(#matches,first+pageSize-1) do
-            local y = 25+step+(j-first)*step
+            local y = firstY+(j-first)*step
             if j==selected then gc:setColorRGB(221,238,242);gc:fillRect(0,y,w,step) end
             gc:setColorRGB(16,34,43)
             drawText(gc, fit(matches[j].title, w-10), 5, y+1)
@@ -252,7 +262,7 @@ function on.paint(gc)
     end
     gc:setColorRGB(45,73,84)
     local hint = open and ("← → листать   "..(offset+1).."/"..#lines)
-                      or "Tab раздел   ↑ ↓ выбор   Enter открыть"
+                      or "↑ ↓ выбор   Enter открыть"
     if helping then
         hint = "Esc / H назад   "..hint
     elseif open and #examples>0 then
@@ -262,13 +272,18 @@ function on.paint(gc)
         end
     elseif open then
         hint = "Esc назад   "..hint
+    else
+        drawText(gc, fit(sectionHint, w-8), 4, h-15-step)
     end
     drawText(gc, fit(hint, w-8), 4, h-15)
 end
 
-function on.tabKey()
-    section = section=="theory" and "practice" or "theory"
+local function switchSection(delta)
+    section = (section-1+delta)%#sections+1
     refresh(); redraw()
+end
+function on.tabKey()
+    switchSection(1)
 end
 function on.charIn(c)
     local key = c:lower()
@@ -301,7 +316,8 @@ function on.arrowKey(key)
         local delta = ({up=-1,down=1,left=-pageSize,right=pageSize})[key] or 0
         offset=math.max(0,math.min(maxOffset,offset+delta))
     else
-        if key=="left" or key=="right" then on.tabKey();return end
+        if key=="left" then switchSection(-1); return end
+        if key=="right" then switchSection(1); return end
         selected=math.max(1,math.min(#matches,selected+(key=="down" and 1 or key=="up" and -1 or 0)))
     end
     redraw()

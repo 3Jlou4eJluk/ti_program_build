@@ -2,7 +2,7 @@
 
 [Русская версия](README.ru.md)
 
-This example combines four TI-BASIC libraries for the non-CAS TI-Nspire CX II-T with a searchable Russian-language Lua handbook. The libraries export 45 calculation functions and four version helpers. The handbook has 24 theory cards and 29 practice cards with input formats, assumptions, and calculator calls.
+This example combines four TI-BASIC libraries for the non-CAS TI-Nspire CX II-T with a searchable Russian-language Lua handbook. The libraries export 45 calculation functions and four version helpers. The handbook has 24 theory cards and 29 practice cards with input formats, assumptions, and calculator calls. A third section, «Как решать» (Worked solutions), follows problems from the wording through the intermediate calculations to a written conclusion. A standalone Russian guide is included as `how-to-solve.ru.md` in the ZIP.
 
 ## Install on the calculator
 
@@ -20,7 +20,7 @@ The result is `0.58` or `29/50`, depending on your display settings.
 
 Open `krguide.tns`. The handbook draws Cyrillic with bundled bitmap glyphs, including on a TI OS set to English. Type Russian search terms with the Latin keys. For example, use `smeshchenie` or `smeschenie` for «смещение» (bias), `dispersiya` for «дисперсия» (variance), and `dzhini` for «Джини» (Gini). Terms such as `roc`, `gini`, `white`, `2sls`, `adf`, and `ols` also work. Search matches the title, tags, and body, with multiple terms in any order.
 
-- **Tab** switches between «Теория» (Theory) and «Практика» (Practice) and keeps the query.
+- **Tab** cycles through «Теория» (Theory), «Практика» (Solvers) and «Как решать» (Worked solutions), keeping the query. On the results screen, use **←** to go back one section or **→** to advance.
 - **↑ / ↓** moves through search results. **Enter** opens the selected card.
 - **↑ / ↓** scrolls by line inside a card. **← / →** scrolls by page.
 - **C** copies a calculator call from the open card to the TI clipboard. Press it again to copy the next call.
