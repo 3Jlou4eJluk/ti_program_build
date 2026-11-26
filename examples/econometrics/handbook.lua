@@ -3,13 +3,12 @@ local sections = {
     {id = "theory", title = "Теория", hitType = "Теория"},
     {id = "practice", title = "Практика", hitType = "Решатель", filterTitle = "Решатели"},
     {id = "guide", title = "Как решать", hitType = "Разбор"},
+    {id = "solution", title = "Готовые решения", hitType = "Решение"},
 }
-local sectionTitles, hitTypes = {}, {}
-for i, item in ipairs(sections) do
-    sectionTitles[i] = item.title
+local hitTypes = {}
+for _, item in ipairs(sections) do
     hitTypes[item.id] = item.hitType
 end
-local sectionHint = "← → / Tab  "..table.concat(sectionTitles, " · ")
 local section, query, selected, open, offset = 1, "", 1, false, 0
 local index = SEARCH.build(CARDS)
 local searchFilter, searchResults = 0, {}
@@ -188,9 +187,8 @@ function on.paint(gc)
             if helping then
                 body = helpText()
             else
-                local heading = item.scope
-                if textWidth(item.title)>titleWidth then heading = item.title.."\n"..heading end
-                body = heading.."\n"..item.body
+                body = item.body.."\n\n"..item.scope
+                if textWidth(item.title)>titleWidth then body = item.title.."\n"..body end
             end
             lines = wrap(body, w-12)
             lastWidth = w
@@ -232,7 +230,7 @@ function on.paint(gc)
     elseif open then
         hint = "Esc назад   "..hint
     else
-        local navigation = sectionHint
+        local navigation = "← → / Tab   Далее: "..sections[section % #sections + 1].title
         if query ~= "" then
             local filter = sections[searchFilter]
             local filterName = filter and (filter.filterTitle or filter.title) or "Все"

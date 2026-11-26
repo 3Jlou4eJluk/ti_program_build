@@ -40,7 +40,7 @@ def solver_cards():
             'tags': f'{qualified} {tags}',
             'description': description,
             'example': question,
-            'body': '\n\n'.join((description, f'Пример задачи. {question}', f'{call}\n{result}', conditions)),
+            'body': '\n\n'.join((description, f'Условия. {conditions}', f'Пример задачи. {question}', f'{call}\n{result}')),
             'scope': f'Решатель · {library}',
         }
     if missing := expected - seen:

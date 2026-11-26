@@ -45,7 +45,7 @@ def read_cards():
     paths = sorted(guide_dir.glob('*.json'), key=lambda path: (path.stem == 'walk_course', path.name))
     for path in paths:
         for card in json.loads(path.read_text(encoding='utf-8')):
-            if card['section'] not in ('theory', 'practice', 'guide'):
+            if card['section'] not in ('theory', 'practice', 'guide', 'solution'):
                 raise ValueError(f'{path}: invalid section')
             # The source practice notes group related calls. The handheld catalog
             # below has a separate, runnable entry for every public solver.
@@ -53,19 +53,22 @@ def read_cards():
                 continue
             keys = ['section', 'title', 'tags', 'body', 'description']
             if card['section'] == 'guide':
-                keys.extend(('example', 'variant'))
-            else:
+                keys.extend(('answer', 'example', 'variant'))
+            elif card['section'] == 'theory':
                 keys.append('intuition')
             fields = {key: card[key].strip() for key in keys}
             if not all(fields.values()):
                 raise ValueError(f'{path}: empty card field')
             if fields['section'] == 'guide':
                 fields['scope'] = 'Пошаговый разбор'
-                fields['body'] = (fields['description'] + '\n\nПример задачи. ' + fields['example']
-                                  + '\n\n' + fields['body'] + '\n\n' + fields.pop('variant'))
+                fields['body'] = '\n\n'.join((fields.pop('answer'), fields['description'], fields['body'],
+                                               'Пример. ' + fields['example'], fields.pop('variant')))
+            elif fields['section'] == 'solution':
+                fields['scope'] = fields['description']
+                fields['tags'] += ' готовое решение ' + fields['description']
             else:
-                fields['body'] = ('Интуиция. ' + fields.pop('intuition') + '\n\n'
-                                  + fields['description'] + '\n\n' + fields['body'])
+                fields['body'] = '\n\n'.join((fields['description'], 'Интуиция. ' + fields.pop('intuition'),
+                                               fields['body']))
                 fields['scope'] = ('Расширение курса' if path.stem in ('extra', 'connections')
                                    else 'Тема с фото')
             yield fields
@@ -73,19 +76,22 @@ def read_cards():
 
 
 def walkthrough_markdown():
-    cards = [card for card in read_cards() if card['section'] == 'guide']
-    if not cards:
-        raise ValueError('The walkthrough section is empty')
-    lines = ['# Эконометрика. Как решать задачи', '',
-             'Выбери разбор по данным в условии. В каждом есть промежуточные вычисления и вывод, который можно записать в работе.', '']
-    for i, card in enumerate(cards, 1):
-        lines.append(f"{i}. [{card['title']}](#task-{i})")
-    for i, card in enumerate(cards, 1):
-        lines.extend(['', f'<a id="task-{i}"></a>', '', f"## {card['title']}"])
-        for paragraph in card['body'].split('\n\n'):
-            rows = [row.strip().replace('*', r'\*') for row in paragraph.splitlines()]
-            lines.extend(['', '<br>\n'.join(rows)])
-    return '\n'.join(lines) + '\n'
+    cards = list(read_cards())
+    lines = ['# Эконометрика. Как решать задачи', '']
+    for section, heading in [('guide', 'Как решать'), ('solution', 'Готовые решения')]:
+        entries = [card for card in cards if card['section'] == section]
+        if not entries:
+            raise ValueError(f'The {section} section is empty')
+        lines.extend([f'## {heading}', ''])
+        for i, card in enumerate(entries, 1):
+            lines.append(f"{i}. [{card['title']}](#{section}-{i})")
+        for i, card in enumerate(entries, 1):
+            lines.extend(['', f'<a id="{section}-{i}"></a>', '', f"### {card['title']}"])
+            for paragraph in card['body'].split('\n\n'):
+                rows = [row.strip().replace('*', r'\*') for row in paragraph.splitlines()]
+                lines.extend(['', '<br>\n'.join(rows)])
+        lines.append('')
+    return '\n'.join(lines).rstrip() + '\n'
 
 
 def handbook_source():

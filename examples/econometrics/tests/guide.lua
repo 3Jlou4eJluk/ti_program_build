@@ -109,11 +109,11 @@ end
 
 has("Теория", 4)
 has("← → / Tab", height-31)
-has("Теория · Практика · Как решать", height-31)
+has("Далее: Практика", height-31)
 has("↑ ↓ выбор   Enter открыть", height-15)
 for _, viewport in ipairs({{318,212}, {245,155}}) do
     width,height=viewport[1],viewport[2]
-    for _, kind in ipairs({"Теория", "Решатель", "Разбор"}) do
+    for _, kind in ipairs({"Теория", "Решатель", "Разбор", "Решение"}) do
         hasType(kind, firstResultY)
         assert(showsType(kind,firstResultY+16))
         on.enterKey()
@@ -130,7 +130,7 @@ for _, viewport in ipairs({{318,212}, {245,155}}) do
     end
     on.charIn("uayta")
     selectResult("Тест Уайта", "Теория")
-    for _, kind in ipairs({"Теория", "Решатель", "Разбор"}) do
+    for _, kind in ipairs({"Теория", "Решатель", "Разбор", "Решение"}) do
         on.tabKey()
         hasType(kind, firstResultY)
     end
@@ -143,6 +143,10 @@ end
 for _, query in ipairs({"smeschenie", "smeshchenie", "смещение"}) do
     expectResult(query, "Смещение и состоятельность")
 end
+on.charIn("dany ostatki")
+has("Серии остатков", firstResultY)
+on.escapeKey()
+expectResult("kr1", "КР1: МНК по таблице", "Решение")
 expectResult("geteroskedastichnost", "Условная и безусловная")
 for _, query in ipairs({"dzhini trapetsiy", "dzhini trapecii", "AUC GINI"}) do
     expectResult(query, "Площадь и индекс Джини")
@@ -202,6 +206,10 @@ on.tabKey()
 has("Фильтр · Как решать", height-31)
 has("Тест Уайта по шагам", firstResultY)
 hasType("Разбор", firstResultY)
+on.tabKey()
+has("Фильтр · Готовые решения", height-31)
+hasType("Решение", firstResultY)
+on.arrowKey("left")
 on.arrowKey("left")
 has("Фильтр · Решатели", height-31)
 on.arrowKey("left")
@@ -287,5 +295,5 @@ expectSameScreen(scrolledCard)
 for i=1,25 do on.arrowKey("right"); paint() end
 on.arrowKey("left"); paint()
 on.escapeKey(); on.escapeKey()
-has("Теория · Практика · Как решать", height-31)
+has("Далее: Как решать", height-31)
 print("PASS: bitmap Cyrillic, math and arrows, right-aligned types, ranked search, navigation, copy, help, pagination and resize")

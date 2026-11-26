@@ -2,12 +2,12 @@
 
 [Русская версия](README.ru.md)
 
-This example combines four TI-BASIC libraries for the non-CAS TI-Nspire CX II-T with a searchable Russian-language Lua handbook. The libraries export 45 calculation functions and four version helpers. Each theory page opens with an intuitive explanation or a small thought experiment. The right-hand type label appears in browse lists, search results and on the open card. The handbook has 24 theory cards and 45 solver cards, one per calculation function, with descriptions, sample problems, inputs and interpreted results. A third section, «Как решать» (Worked solutions), follows problems from the wording through the intermediate calculations to a written conclusion. A standalone Russian guide is included as `how-to-solve.ru.md` in the ZIP.
+This example combines four TI-BASIC libraries for the non-CAS TI-Nspire CX II-T with a searchable Russian-language Lua handbook. The libraries export 45 calculation functions and four version helpers. The 24 theory cards open with a direct answer, followed by intuition and formal details. Each of the 45 solver cards identifies its inputs and output before giving conditions, a copyable call and an interpreted example. «Как решать» gives eight reusable methods. «Готовые решения» preserves earlier worked examples and answers the photographed first-test variants. The ZIP includes both sections in Russian as `how-to-solve.ru.md`.
 
 ## Install on the calculator
 
 1. Extract `econometrics-cx-ii-t.zip` on your computer. Connect the handheld over USB and open [TI-Nspire CX II Connect](https://nspireconnect.ti.com/).
-2. Copy the four `.tns` files from the archive's `MyLib` folder directly into `MyLib` on the calculator. Copy `krguide.tns` to a regular documents folder. If you are updating an existing installation, replace all five files.
+2. Copy the four `.tns` files from the archive's `MyLib` folder directly into `MyLib` on the calculator. Copy `krguide.tns` to a regular documents folder. For this handbook update, existing installations with the four published libraries only need the new `krguide.tns`.
 3. Press **Doc** and choose **Refresh Libraries**. Open a **Calculator** page in a document and enter the call below. Use **Shift + ÷** to enter the backslash. [TI library instructions](https://education.ti.com/html/eguides/nspire/EG_Nspire/EN/content/m_libraries/lb_using_library_objects.HTML)
 
 ```text
@@ -18,9 +18,9 @@ The result is `0.58` or `29/50`, depending on your display settings.
 
 ## Use the Lua handbook
 
-Open `krguide.tns`. The handbook draws Cyrillic with bundled bitmap glyphs, including on a TI OS set to English. Type Russian search terms with the Latin keys. For example, use `smeshchenie` or `smeschenie` for «смещение» (bias), `dispersiya` for «дисперсия» (variance), and `dzhini` for «Джини» (Gini). Terms such as `roc`, `gini`, `white`, `2sls`, `adf`, and `ols` also work. Start typing in any section to search everything offline. Each hit is a theory page, a worked solution or a single solver. Field-weighted BM25 uses title, keywords and body text, including descriptions and example questions. Rare matches carry more weight, repeated words have diminishing returns and longer text is normalized. Prefix and transliteration matching support incremental input. The eight walkthroughs each include a plausible change to the question, with its effect on the calculation or conclusion.
+Open `krguide.tns`. The handbook draws Cyrillic with bundled bitmap glyphs, including on a TI OS set to English. Type Russian search terms with the Latin keys. For example, use `smeshchenie` or `smeschenie` for «смещение» (bias), `dispersiya` for «дисперсия» (variance), and `dzhini` for «Джини» (Gini). Terms such as `roc`, `gini`, `white`, `2sls`, `adf`, and `ols` also work. Start typing in any section to search everything offline. Each hit is a theory page, method, worked solution or solver. Field-weighted BM25 uses title, keywords and body text, including descriptions and example questions. Rare matches carry more weight, repeated words have diminishing returns and longer text is normalized. Prefix and transliteration matching support incremental input. The eight walkthroughs each include a plausible change to the question, with its effect on the calculation or conclusion.
 
-- **Tab** browses sections when the search box is empty. While searching, **Tab** or **← / →** filters results by type. Editing the query searches all three types again. **Esc** closes the item and keeps your place.
+- **Tab** browses sections when the search box is empty. While searching, **Tab** or **← / →** filters results by type. Editing the query searches all four types again. **Esc** closes the item and keeps your place.
 - **↑ / ↓** moves through search results. **Enter** opens the selected card.
 - **↑ / ↓** scrolls by line inside a card. **← / →** scrolls by page.
 - **C** copies a calculator call from the open card to the TI clipboard. Press it again to copy the next call.
