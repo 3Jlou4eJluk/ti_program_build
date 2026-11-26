@@ -71,6 +71,15 @@ def read_cards():
                                                fields['body']))
                 fields['scope'] = ('Расширение курса' if path.stem in ('extra', 'connections')
                                    else 'Тема с фото')
+            if path.stem.startswith('lecture_') and not card.get('pages'):
+                raise ValueError(f'{path}: missing slide reference for {fields["title"]}')
+            if pages := card.get('pages'):
+                reference = 'Куренной, с. ' + pages
+                if path.stem.startswith('lecture_'):
+                    fields['scope'] = reference
+                else:
+                    fields['scope'] += ' · ' + reference
+                fields['tags'] += ' лекция Куренной ' + pages
             yield fields
     yield from runpy.run_path(str(ROOT / 'solver_catalog.py'))['solver_cards']()
 

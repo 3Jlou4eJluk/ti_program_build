@@ -2,7 +2,9 @@
 
 [Русская версия](README.ru.md)
 
-This example combines four TI-BASIC libraries for the non-CAS TI-Nspire CX II-T with a searchable Russian-language Lua handbook. The libraries export 45 calculation functions and four version helpers. The 24 theory cards open with a direct answer, followed by intuition and formal details. Each of the 45 solver cards identifies its inputs and output before giving conditions, a copyable call and an interpreted example. «Как решать» gives eight reusable methods. «Готовые решения» preserves earlier worked examples and answers the photographed first-test variants. The ZIP includes both sections in Russian as `how-to-solve.ru.md`.
+This example combines four TI-BASIC libraries for the non-CAS TI-Nspire CX II-T with a searchable Russian-language Lua handbook. The libraries export 45 calculation functions and four version helpers. The 59 theory cards open with a direct answer, followed by intuition and formal details. Each of the 45 solver cards identifies its inputs and output before giving conditions, a copyable call and an interpreted example. «Как решать» gives eight reusable methods. «Готовые решения» preserves earlier worked examples and answers the photographed first-test variants. The ZIP includes both sections in Russian as `how-to-solve.ru.md`.
+
+The handbook also covers D. S. Kurennoy’s *Theory of Econometrics*. Search for `kurennoy` or `lektsiya` to find material from the slides. The end of each lecture-linked card gives its slide numbers. For the first test, the lecture uses the strict VIF threshold of 5 (slide 40). Slides 59–60 reproduce the sign pattern and both critical bounds in the archived runs problem.
 
 ## Install on the calculator
 
