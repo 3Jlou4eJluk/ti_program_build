@@ -2,6 +2,13 @@
 local section, query, selected, open, offset = "theory", "", 1, false, 0
 local matches, lines, lastWidth, maxOffset, pageSize = {}, {}, 0, 0, 6
 local examples, copyIndex = {}, 0
+local helping, cardOffset = false, 0
+local libraryTopics = {
+    krdiag = "диагностика регрессии",
+    krextra = "регрессия, ошибки и тесты",
+    krroc = "ROC, AUC и индекс Джини",
+    krsys = "системы уравнений и 2МНК",
+}
 local charPattern = "[%z\1-\127\194-\244][\128-\191]*"
 local glyphs = {}
 local step = 16
@@ -108,7 +115,7 @@ local function searchRank(card, terms)
 end
 
 local function refresh()
-    matches, selected, offset, open = {}, 1, 0, false
+    matches, selected, offset, open, helping = {}, 1, 0, false, false
     local terms = {}
     local input = query:gsub("[-/]", " "):gsub("–", " "):gsub("—", " ")
     for token in input:gmatch("%S+") do
@@ -182,6 +189,24 @@ local function fit(s, width)
 end
 
 local function redraw() platform.window:invalidate() end
+
+local function toggleHelp()
+    if helping then offset = cardOffset else cardOffset, offset = offset, 0 end
+    helping, lastWidth = not helping, -1
+    redraw()
+end
+
+local function helpText()
+    local library, name = examples[math.max(1, copyIndex)]:match("^(%a+)\\(%w+)")
+    local topic = libraryTopics[library]
+    return "Слева от \\ — библиотека "..library..".\n"
+        ..(topic and "Раздел — "..topic..".\n" or "")
+        .."Справа от \\ — функция "..name..".\n\n"
+        .."В карточке нажмите C.\n"
+        .."Calculator → Ctrl+V → Enter\n"
+        .."Перед Enter замените шаблоны своими данными."
+end
+
 function on.paint(gc)
     local w,h = platform.window:width(),platform.window:height()
     local item = matches[selected]
@@ -189,16 +214,24 @@ function on.paint(gc)
     gc:setColorRGB(26,58,78); gc:fillRect(0,0,w,22)
     gc:setColorRGB(255,255,255)
     local label = section=="theory" and "Теория" or "Практика"
-    drawText(gc, fit(open and item.title or label.."  ·  "..#matches, w-10), 5, 4)
+    local title = helping and "Как выполнить вызов" or (open and item.title or label.."  ·  "..#matches)
+    drawText(gc, fit(title, w-10), 5, 4)
     gc:setColorRGB(16,34,43)
     if open then
         if lastWidth ~= w then
-            local heading = item.scope
-            if textWidth(item.title)>w-16 then heading = heading.." · "..item.title end
-            lines = wrap(heading.."\n"..item.body, w-12)
+            local body
+            if helping then
+                body = helpText()
+            else
+                local heading = item.scope
+                if textWidth(item.title)>w-16 then heading = heading.." · "..item.title end
+                body = heading.."\n"..item.body
+            end
+            lines = wrap(body, w-12)
             lastWidth = w
         end
-        pageSize = math.max(1,math.floor((h-42)/step))
+        local footerHeight = (#examples>0 and not helping) and step or 0
+        pageSize = math.max(1,math.floor((h-42-footerHeight)/step))
         maxOffset = math.max(0,#lines-pageSize)
         offset = math.max(0,math.min(maxOffset,offset))
         for j=1,pageSize do
@@ -218,11 +251,17 @@ function on.paint(gc)
         if #matches==0 then drawText(gc, fit("Совпадений нет", w-10), 5, 26+step) end
     end
     gc:setColorRGB(45,73,84)
-    local hint = open and ("Esc назад   ← → листать   "..(offset+1).."/"..#lines)
+    local hint = open and ("← → листать   "..(offset+1).."/"..#lines)
                       or "Tab раздел   ↑ ↓ выбор   Enter открыть"
-    if open and #examples>0 then
-        hint = copyIndex==0 and ("C копировать вызов   "..hint)
-               or ("Скопировано "..copyIndex.."/"..#examples.."  "..examples[copyIndex])
+    if helping then
+        hint = "Esc / H назад   "..hint
+    elseif open and #examples>0 then
+        drawText(gc, fit("H помощь   C копия   Esc назад", w-8), 4, h-15-step)
+        if copyIndex>0 then
+            hint = "Скопировано "..copyIndex.."/"..#examples.."  "..examples[copyIndex]
+        end
+    elseif open then
+        hint = "Esc назад   "..hint
     end
     drawText(gc, fit(hint, w-8), 4, h-15)
 end
@@ -232,7 +271,10 @@ function on.tabKey()
     refresh(); redraw()
 end
 function on.charIn(c)
-    if open and c:lower()=="c" and #examples>0 then
+    local key = c:lower()
+    if open and key=="h" and #examples>0 then
+        toggleHelp()
+    elseif open and not helping and key=="c" and #examples>0 then
         copyIndex = copyIndex % #examples + 1
         clipboard.addText(examples[copyIndex])
         redraw()
@@ -250,6 +292,7 @@ function on.enterKey()
     redraw()
 end
 function on.escapeKey()
+    if helping then toggleHelp(); return end
     if open then open=false else query="";refresh() end
     redraw()
 end

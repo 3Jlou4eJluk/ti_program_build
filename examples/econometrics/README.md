@@ -24,7 +24,8 @@ Open `krguide.tns`. The handbook draws Cyrillic with bundled bitmap glyphs, incl
 - **↑ / ↓** moves through search results. **Enter** opens the selected card.
 - **↑ / ↓** scrolls by line inside a card. **← / →** scrolls by page.
 - **C** copies a calculator call from the open card to the TI clipboard. Press it again to copy the next call.
-- **Esc** returns to the results. Press it again to clear the search. **Delete** removes the last character.
+- **H** explains the library and function names on a card with calls and shows how to run a call. Press **H** or **Esc** to return to the card.
+- **Esc** in a card returns to the results. Press it again to clear the search. **Delete** removes the last character.
 
 Use **Ctrl + V** to paste a call into a Calculator page. Replace placeholders with your own inputs. Enter lists in braces, use the TI matrix template for matrices, and use a decimal point in the examples.
 

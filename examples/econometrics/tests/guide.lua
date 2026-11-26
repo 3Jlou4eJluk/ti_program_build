@@ -29,6 +29,12 @@ local function paint()
     on.paint(gc)
 end
 
+local function expectSameScreen(previous)
+    paint()
+    for position, color in pairs(previous) do assert(pixels[position]==color) end
+    for position, color in pairs(pixels) do assert(previous[position]==color) end
+end
+
 local function raster(value)
     local points, width = {}, 0
     for char in value:gmatch(charPattern) do
@@ -133,6 +139,27 @@ has("Расчёт LM Уайта", 4)
 on.charIn("c")
 assert(copied=="krdiag\\white(40,0.25,5,11.070)",copied)
 on.escapeKey(); on.escapeKey()
+width=320
+expectFirstResult("rexact", "Точный критерий серий")
+on.charIn("krdiag\\rexact(")
+has("Точный критерий серий", firstResultY)
+on.enterKey()
+has("H помощь   C копия", height-31)
+on.charIn("h")
+has("Как выполнить вызов", 4)
+has("Слева от \\ — библиотека krdiag.")
+has("Раздел — диагностика регрессии.")
+has("Справа от \\ — функция rexact.")
+has("Calculator → Ctrl+V → Enter")
+has("Перед Enter замените шаблоны")
+has("Esc / H назад", height-15)
+on.escapeKey()
+has("Точный критерий серий", 4)
+on.charIn("c")
+assert(copied=="krdiag\\rexact({-2,-1,3,4},0.05,0)",copied)
+has("Скопировано 1/1", height-15)
+has("H помощь   C копия", height-31)
+on.escapeKey(); on.escapeKey()
 on.charIn("KREXTRA\\OLS(")
 has("МНК по данным. Общий пример", firstResultY)
 on.enterKey()
@@ -141,7 +168,20 @@ assert(copied=="krextra\\ols(y,x)",copied)
 on.charIn("c")
 assert(copied=="krextra\\resid(y,x)",copied)
 width,height=245,155
+paint()
+on.arrowKey("right")
+paint()
+local scrolledCard = pixels
+on.charIn("H")
+has("Слева от \\ — библиотека krextra.")
+has("Справа от \\ — функция resid.")
+on.arrowKey("right")
+has("Перед Enter замените шаблоны")
+on.charIn("h")
+expectSameScreen(scrolledCard)
+on.charIn("c")
+assert(copied=="krextra\\olssum(y,x)",copied)
 for i=1,25 do on.arrowKey("right"); paint() end
 on.arrowKey("left"); paint()
 on.escapeKey(); on.escapeKey()
-print("PASS: bitmap Cyrillic, math and arrows, ranked Cyrillic and Latin search, Tab, copy, pagination and resize")
+print("PASS: bitmap Cyrillic, math and arrows, ranked search, Tab, copy, help, pagination and resize")

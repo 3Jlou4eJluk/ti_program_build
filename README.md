@@ -37,6 +37,8 @@ krroc\steparea({0,.3,1},{.3,1})  →  {.79,.58}
 
 The example targets the **TI-Nspire CX II-T without CAS**. The recorded Firebird run used a **first-generation TI-Nspire CX without CAS, OS 4.5.5.79**, and passed **55 of 55** numerical checks. It also exercised Cyrillic rendering, transliterated input and copying a function call. To repeat the checks on a CX II-T, place the [test document](https://github.com/3Jlou4eJluk/ti_program_build/raw/refs/heads/main/downloads/krcheck.tns) in a regular documents folder after installation, open it and press **Enter**. A run on the exact CX II-T model is still pending. [Handheld model](examples/econometrics/tests/evidence/model.png) · [OS version](examples/econometrics/tests/evidence/os-version.png)
 
+On a solver card, **H** explains the library and function names. Press **H** again, then **C** to copy the example. In Calculator, paste it with **Ctrl+V** and press **Enter**. For the exact runs test, the example has two runs and a two-sided p-value of 2/3. [Solver card](examples/econometrics/tests/evidence/practice.png) · [Call help](examples/econometrics/tests/evidence/call-help.png) · [Calculator result](examples/econometrics/tests/evidence/runs-result.png)
+
 ## Source map
 
 | Path | Contents |
