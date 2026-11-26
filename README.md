@@ -2,7 +2,7 @@
 
 Build TI-BASIC libraries and Lua documents as `.tns` files on a desktop. This repository covers three problems that show up on a handheld: getting TI OS to register a generated library, displaying Cyrillic through a bitmap font, and searching Russian text from a Latin keypad. The examples include source files, build scripts and screenshots from [Firebird](https://github.com/nspire-emus/firebird).
 
-![Latin-keypad search for a Russian term on TI OS](examples/econometrics/tests/evidence/search.png)
+![Global results for a transliterated search on TI OS](examples/econometrics/tests/evidence/search.png)
 
 ## Build a document
 
@@ -24,7 +24,7 @@ The first script packages `libs/econ/Document.xml` and `Problem1.xml` as `build/
 | --- | --- |
 | A generated document opens, but a library function is missing after Refresh Libraries | Check the symbol XML, line separators and reserved TI names. Start with the [format and debugging guide](docs/README.md). |
 | Cyrillic labels do not render with the system font | The [Lua handbook](examples/econometrics/handbook.lua) draws glyphs from a [bitmap table](examples/econometrics/font.lua). The same glyph widths drive wrapping and scrolling. |
-| The keyboard has no Cyrillic keys | The handbook indexes titles, tags and body text in transliteration. Typing `smeshchenie` or `smeschenie` finds «Смещение». [On-device example and controls](examples/econometrics/README.md) |
+| The keyboard has no Cyrillic keys | An offline, field-weighted BM25 index ranks theory pages, worked solutions and individual solvers together, including problem wording in transliteration. Typing `smeshchenie` or `smeschenie` finds «Смещение». [On-device example and controls](examples/econometrics/README.md) |
 | The desktop build succeeds, but a calculation fails on TI OS | Use the [on-device smoke test](examples/econometrics/tests/krcheck.lua) to call the installed libraries through the calculator's own math engine. [Recorded result](examples/econometrics/tests/evidence/c-result1.png) |
 
 ## Install the working example
@@ -37,7 +37,7 @@ krroc\steparea({0,.3,1},{.3,1})  →  {.79,.58}
 
 The example targets the **TI-Nspire CX II-T without CAS**. The recorded Firebird run used a **first-generation TI-Nspire CX without CAS, OS 4.5.5.79**, and passed **55 of 55** numerical checks. It also exercised Cyrillic rendering, transliterated input and copying a function call. To repeat the checks on a CX II-T, place the [test document](https://github.com/3Jlou4eJluk/ti_program_build/raw/refs/heads/main/downloads/krcheck.tns) in a regular documents folder after installation, open it and press **Enter**. A run on the exact CX II-T model is still pending. [Handheld model](examples/econometrics/tests/evidence/model.png) · [OS version](examples/econometrics/tests/evidence/os-version.png)
 
-The handbook also has a «Как решать» section for worked solutions. **Tab** twice from Theory opens it. Each solution starts with the problem data, works through the calculation and shows how to express the conclusion. [Read the standalone Russian walkthroughs](downloads/how-to-solve.ru.md) · [Section on TI OS](examples/econometrics/tests/evidence/walkthroughs.png) · [Example conclusion](examples/econometrics/tests/evidence/runs-conclusion.png).
+The handbook also has a «Как решать» section for worked solutions. **Tab** twice from Theory opens it. The same Firebird setup evaluated all 45 copyable solver examples and checked one numerical result from each. [Solver example checks](examples/econometrics/tests/evidence/solver-examples.png). Each solution starts with the problem data, works through the calculation and shows how to express the conclusion. [Read the standalone Russian walkthroughs](downloads/how-to-solve.ru.md) · [Section on TI OS](examples/econometrics/tests/evidence/walkthroughs.png) · [Example conclusion](examples/econometrics/tests/evidence/runs-conclusion.png).
 
 On a solver card, **H** explains the library and function names. Press **H** again, then **C** to copy the example. In Calculator, paste it with **Ctrl+V** and press **Enter**. For the exact runs test, the example has two runs and a two-sided p-value of 2/3. [Solver card](examples/econometrics/tests/evidence/practice.png) · [Call help](examples/econometrics/tests/evidence/call-help.png) · [Calculator result](examples/econometrics/tests/evidence/runs-result.png)
 

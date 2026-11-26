@@ -47,15 +47,26 @@ def read_cards():
         for card in json.loads(path.read_text(encoding='utf-8')):
             if card['section'] not in ('theory', 'practice', 'guide'):
                 raise ValueError(f'{path}: invalid section')
-            fields = {key: card[key].strip() for key in ('section', 'title', 'tags', 'body')}
+            # The source practice notes group related calls. The handheld catalog
+            # below has a separate, runnable entry for every public solver.
+            if card['section'] == 'practice':
+                continue
+            keys = ['section', 'title', 'tags', 'body', 'description']
+            if card['section'] == 'guide':
+                keys.extend(('example', 'variant'))
+            fields = {key: card[key].strip() for key in keys}
             if not all(fields.values()):
                 raise ValueError(f'{path}: empty card field')
             if fields['section'] == 'guide':
                 fields['scope'] = 'Пошаговый разбор'
+                fields['body'] = (fields['description'] + '\n\nПример задачи. ' + fields['example']
+                                  + '\n\n' + fields['body'] + '\n\n' + fields.pop('variant'))
             else:
+                fields['body'] = fields['description'] + '\n\n' + fields['body']
                 fields['scope'] = ('Расширение курса' if path.stem in ('extra', 'connections')
                                    else 'Тема с фото')
             yield fields
+    yield from runpy.run_path(str(ROOT / 'solver_catalog.py'))['solver_cards']()
 
 
 def walkthrough_markdown():
@@ -76,12 +87,14 @@ def walkthrough_markdown():
 
 def handbook_source():
     cards = ['{' + ','.join(key + '=' + json.dumps(value, ensure_ascii=False)
-                             for key, value in card.items()) + '}'
+                             for key, value in card.items() if key in ('section', 'title', 'tags', 'body', 'scope')) + '}'
              for card in read_cards()]
     template = (ROOT / 'handbook.lua').read_text(encoding='utf-8')
     font = (ROOT / 'font.lua').read_text(encoding='utf-8')
+    search = (ROOT / 'search.lua').read_text(encoding='utf-8')
     return ('local CARDS = {\n' + ',\n'.join(cards) + '\n}\n'
-            + 'local BITMAPS = (function()\n' + font + 'end)()\n' + template)
+            + 'local BITMAPS = (function()\n' + font + 'end)()\n'
+            + 'local SEARCH = (function()\n' + search + 'end)()\n' + template)
 
 
 def package():

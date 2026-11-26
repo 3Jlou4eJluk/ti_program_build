@@ -1,13 +1,18 @@
--- CARDS and BITMAPS are included at build time.
+-- CARDS, SEARCH and BITMAPS are included at build time.
 local sections = {
-    {id = "theory", title = "Теория"},
-    {id = "practice", title = "Практика"},
-    {id = "guide", title = "Как решать"},
+    {id = "theory", title = "Теория", hitType = "Теория"},
+    {id = "practice", title = "Практика", hitType = "Решатель", filterTitle = "Решатели"},
+    {id = "guide", title = "Как решать", hitType = "Разбор"},
 }
-local sectionTitles = {}
-for i, item in ipairs(sections) do sectionTitles[i] = item.title end
+local sectionTitles, hitTypes = {}, {}
+for i, item in ipairs(sections) do
+    sectionTitles[i] = item.title
+    hitTypes[item.id] = item.hitType
+end
 local sectionHint = "← → / Tab  "..table.concat(sectionTitles, " · ")
 local section, query, selected, open, offset = 1, "", 1, false, 0
+local index = SEARCH.build(CARDS)
+local searchFilter, searchResults = 0, {}
 local matches, lines, lastWidth, maxOffset, pageSize = {}, {}, 0, 0, 6
 local examples, copyIndex = {}, 0
 local helping, cardOffset = false, 0
@@ -71,82 +76,18 @@ local function drawText(gc, s, x, y)
     end
 end
 
-local upper, lower = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
-local latin = {"a", "b", "v", "g", "d", "e", "e", "zh", "z", "i", "i", "k", "l", "m", "n", "o", "p",
-               "r", "s", "t", "u", "f", "h", "c", "ch", "sh", "sch", "", "y", "", "e", "iu", "ia"}
-local translit = {}
-for _, alphabet in ipairs({upper, lower}) do
-    local i = 0
-    for ch in alphabet:gmatch(charPattern) do
-        i = i + 1
-        translit[ch] = latin[i]
-    end
-end
-
-local function spelling(s)
-    return (s:gsub("['`]", ""):gsub("’", "")
-        :gsub("shch", "sch"):gsub("kh", "h"):gsub("ts", "c")
-        :gsub("[yj]o", "e"):gsub("[yj]u", "iu"):gsub("[yj]a", "ia")
-        :gsub("j", "i"):gsub("([aeiouy])y", "%1i"):gsub("yi%f[^a-z]", "ii"))
-end
-
-local function indexText(s)
-    -- Fold Cyrillic once. ASCII tags and calculator calls retain their spelling.
-    return (s:lower():gsub("[\128-\255]+", function(part)
-        return spelling((part:gsub(charPattern, translit)))
-    end))
-end
-
-for i, card in ipairs(CARDS) do
-    local title, tags = indexText(card.title), indexText(card.tags)
-    card.index = title.."\n"..tags.."\n"..indexText(card.body)
-    card.titleEnd, card.tagsEnd = #title, #title + #tags + 1
-    card.order = i
-end
-
-local function searchRank(card, terms)
-    local rank, titleWeight = 0, #terms + 1
-    for _, term in ipairs(terms) do
-        local at = card.index:find(term[1], 1, true)
-        if term[2] and (not at or at > card.titleEnd) then
-            local alias = card.index:find(term[2], 1, true)
-            if alias and (not at or alias < at) then at = alias end
-        end
-        if not at then return nil end
-        if at <= card.titleEnd then
-            rank = rank + titleWeight
-        elseif at <= card.tagsEnd then
-            rank = rank + 1
-        end
-    end
-    return rank
-end
-
 local function refresh()
     matches, selected, offset, open, helping = {}, 1, 0, false, false
-    local terms = {}
-    local sectionId = sections[section].id
-    local input = query:gsub("[-/]", " "):gsub("–", " "):gsub("—", " ")
-    for token in input:gmatch("%S+") do
-        local exact = indexText(token)
-        if exact == "" then exact = token end
-        local alias = spelling(exact)
-        terms[#terms+1] = {exact, alias ~= exact and alias ~= "" and alias or nil}
-    end
-    for _, card in ipairs(CARDS) do
-        if card.section == sectionId then
-            local rank = searchRank(card, terms)
-            if rank then
-                card.rank = rank
-                matches[#matches+1] = card
-            end
+    local cards, sectionId = CARDS, sections[section].id
+    if query ~= "" then
+        if searchFilter == 0 then
+            matches = searchResults
+            return
         end
+        cards, sectionId = searchResults, sections[searchFilter].id
     end
-    if #terms > 0 then
-        table.sort(matches, function(a, b)
-            if a.rank == b.rank then return a.order < b.order end
-            return a.rank > b.rank
-        end)
+    for _, card in ipairs(cards) do
+        if card.section == sectionId then matches[#matches+1] = card end
     end
 end
 refresh()
@@ -199,6 +140,13 @@ end
 
 local function redraw() platform.window:invalidate() end
 
+local function setQuery(value)
+    query, searchFilter = value, 0
+    searchResults = query == "" and {} or index:find(query)
+    refresh()
+    redraw()
+end
+
 local function toggleHelp()
     if helping then offset = cardOffset else cardOffset, offset = offset, 0 end
     helping, lastWidth = not helping, -1
@@ -222,7 +170,7 @@ function on.paint(gc)
     gc:setColorRGB(255,255,255); gc:fillRect(0,0,w,h)
     gc:setColorRGB(26,58,78); gc:fillRect(0,0,w,22)
     gc:setColorRGB(255,255,255)
-    local label = sections[section].title
+    local label = query == "" and sections[section].title or "Общий поиск"
     local title = helping and "Как выполнить вызов" or (open and item.title or label.."  ·  "..#matches)
     drawText(gc, fit(title, w-10), 5, 4)
     gc:setColorRGB(16,34,43)
@@ -255,8 +203,17 @@ function on.paint(gc)
         for j=first,math.min(#matches,first+pageSize-1) do
             local y = firstY+(j-first)*step
             if j==selected then gc:setColorRGB(221,238,242);gc:fillRect(0,y,w,step) end
+            local hit = matches[j]
+            local titleWidth = w-10
+            if query ~= "" then
+                local kind = hitTypes[hit.section]
+                local kindWidth = textWidth(kind)
+                titleWidth = titleWidth-kindWidth-8
+                gc:setColorRGB(45,73,84)
+                drawText(gc, kind, w-5-kindWidth, y+1)
+            end
             gc:setColorRGB(16,34,43)
-            drawText(gc, fit(matches[j].title, w-10), 5, y+1)
+            drawText(gc, fit(hit.title, titleWidth), 5, y+1)
         end
         if #matches==0 then drawText(gc, fit("Совпадений нет", w-10), 5, 26+step) end
     end
@@ -273,17 +230,27 @@ function on.paint(gc)
     elseif open then
         hint = "Esc назад   "..hint
     else
-        drawText(gc, fit(sectionHint, w-8), 4, h-15-step)
+        local navigation = sectionHint
+        if query ~= "" then
+            local filter = sections[searchFilter]
+            local filterName = filter and (filter.filterTitle or filter.title) or "Все"
+            navigation = "← → / Tab  Фильтр · "..filterName
+        end
+        drawText(gc, fit(navigation, w-8), 4, h-15-step)
     end
     drawText(gc, fit(hint, w-8), 4, h-15)
 end
 
-local function switchSection(delta)
-    section = (section-1+delta)%#sections+1
+local function switchView(delta)
+    if query == "" then
+        section = (section-1+delta)%#sections+1
+    else
+        searchFilter = (searchFilter+delta)%(#sections+1)
+    end
     refresh(); redraw()
 end
 function on.tabKey()
-    switchSection(1)
+    if not open or query == "" then switchView(1) end
 end
 function on.charIn(c)
     local key = c:lower()
@@ -293,10 +260,10 @@ function on.charIn(c)
         copyIndex = copyIndex % #examples + 1
         clipboard.addText(examples[copyIndex])
         redraw()
-    elseif not open and #query<128 then query=query..c; refresh(); redraw() end
+    elseif not open and #query<128 then setQuery(query..c) end
 end
 function on.backspaceKey()
-    if not open then query = query:gsub(charPattern.."$",""); refresh(); redraw() end
+    if not open then setQuery((query:gsub(charPattern.."$", ""))) end
 end
 function on.enterKey()
     if open or not matches[selected] then return end
@@ -308,16 +275,20 @@ function on.enterKey()
 end
 function on.escapeKey()
     if helping then toggleHelp(); return end
-    if open then open=false else query="";refresh() end
-    redraw()
+    if open then
+        open=false
+        redraw()
+    else
+        setQuery("")
+    end
 end
 function on.arrowKey(key)
     if open then
         local delta = ({up=-1,down=1,left=-pageSize,right=pageSize})[key] or 0
         offset=math.max(0,math.min(maxOffset,offset+delta))
     else
-        if key=="left" then switchSection(-1); return end
-        if key=="right" then switchSection(1); return end
+        if key=="left" then switchView(-1); return end
+        if key=="right" then switchView(1); return end
         selected=math.max(1,math.min(#matches,selected+(key=="down" and 1 or key=="up" and -1 or 0)))
     end
     redraw()

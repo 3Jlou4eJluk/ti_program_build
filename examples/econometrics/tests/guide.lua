@@ -1,7 +1,7 @@
 -- Exercise TI event handlers under Lua 5.1 at common handheld viewport sizes.
 local width, height = 318, 212
 local firstResultY = 42
-local pixels, ink
+local pixels, ink, highlightedY
 local testsDir = arg[0]:match("^.*/") or "./"
 local bitmaps = dofile(testsDir.."../font.lua")
 local charPattern = "[%z\1-\127\194-\244][\128-\191]*"
@@ -16,6 +16,7 @@ local gc = {
     setColorRGB=function(self,r,g,b) ink=('%d,%d,%d'):format(r,g,b) end,
     fillRect=function(self,x,y,w,h)
         assert(x>=0 and y>=0 and w>0 and h>0 and x+w<=width and y+h<=height)
+        if ink=="221,238,242" then highlightedY=y+1 end
         if x~=0 then
             for dy=y,y+h-1 do
                 for dx=x,x+w-1 do pixels[dy*width+dx]=ink end
@@ -25,7 +26,7 @@ local gc = {
 }
 dofile(assert(arg[1],"expected compiled handbook Lua path"))
 local function paint()
-    pixels={}
+    pixels, highlightedY={}, nil
     on.paint(gc)
 end
 
@@ -53,8 +54,7 @@ local function raster(value)
     return points, width
 end
 
-local function has(value, rowY)
-    paint()
+local function shows(value, rowY)
     local points, textWidth = raster(value)
     local first = points[1]
     for y=rowY or 0,rowY or height-14 do
@@ -68,16 +68,31 @@ local function has(value, rowY)
                         break
                     end
                 end
-                if hit then return end
+                if hit then return true end
             end
         end
     end
-    error("Missing rasterized text: "..value)
+    return false
 end
 
-local function expectFirstResult(query, firstTitle)
+local function has(value, rowY)
+    paint()
+    assert(shows(value,rowY), "Missing rasterized text: "..value)
+end
+
+local function selectResult(title, kind)
+    for _=1,100 do
+        paint()
+        if not highlightedY then break end
+        if shows(title,highlightedY) and (not kind or shows(kind,highlightedY)) then return end
+        on.arrowKey("down")
+    end
+    error("Missing search result: "..title)
+end
+
+local function expectResult(query, title, kind)
     on.charIn(query)
-    local ok, message = pcall(has, firstTitle, firstResultY)
+    local ok, message = pcall(selectResult, title, kind)
     assert(ok, query.." | "..tostring(message))
     on.escapeKey()
 end
@@ -87,91 +102,111 @@ has("← → / Tab", height-31)
 has("Теория · Практика · Как решать", height-31)
 has("↑ ↓ выбор   Enter открыть", height-15)
 for _, query in ipairs({"uaita", "UAYTA", "uayta khi-kvadrat", "уайта хи-квадрат"}) do
-    expectFirstResult(query, "Тест Уайта")
+    expectResult(query, "Тест Уайта", "Теория")
 end
 for _, query in ipairs({"smeschenie", "smeshchenie", "смещение"}) do
-    expectFirstResult(query, "Смещение и состоятельность")
+    expectResult(query, "Смещение и состоятельность")
 end
-expectFirstResult("geteroskedastichnost", "Условная и безусловная")
+expectResult("geteroskedastichnost", "Условная и безусловная")
 for _, query in ipairs({"dzhini trapetsiy", "dzhini trapecii", "AUC GINI"}) do
-    expectFirstResult(query, "Площадь и индекс Джини")
+    expectResult(query, "Площадь и индекс Джини")
 end
 for _, query in ipairs({"Diki-Fullera", "dik fullera", "Dickey–Fuller", "diki styudenta", "diki stiudenta", "ADF unit root"}) do
-    expectFirstResult(query, "Дики — Фуллер и ADF")
+    expectResult(query, "Дики — Фуллер и ADF")
 end
 for _, query in ipairs({"метод рядов", "metod ryadov", "metod riadov"}) do
-    expectFirstResult(query, "Метод рядов")
+    expectResult(query, "Метод рядов")
 end
-expectFirstResult("doveritelnyy OLS", "МНК, SE и доверительный")
-expectFirstResult("уайта LM", "Тест Уайта")
-expectFirstResult("2SLS algoritm", "Алгоритм 2МНК")
-expectFirstResult("HC3", "Робастные ошибки HC0–HC3")
+expectResult("doveritelnyy OLS", "МНК, SE и доверительный")
+expectResult("уайта LM", "Тест Уайта", "Теория")
+expectResult("2SLS algoritm", "Алгоритм 2МНК")
+expectResult("HC3", "Робастные ошибки HC0–HC3")
 on.charIn("ДЖИНИ площадь трапеция")
-has("Джини")
+selectResult("Площадь и индекс Джини")
 on.enterKey()
-has("AUC")
+has("Площадь и индекс Джини", 4)
 on.arrowKey("right")
 paint()
 on.escapeKey()
 on.escapeKey()
+
+for ch in ("uayta"):gmatch(".") do on.charIn(ch) end
+has("Общий поиск", 4)
+has("Поиск: uayta", 23)
+has("Фильтр · Все", height-31)
+local allResults = pixels
+on.escapeKey()
 on.tabKey()
 has("Практика", 4)
-on.charIn("roc")
-has("Координаты ROC по прогнозам", firstResultY)
+on.charIn("uayta")
+expectSameScreen(allResults)
+on.escapeKey()
+on.arrowKey("right")
+has("Как решать", 4)
+on.charIn("uayta")
+expectSameScreen(allResults)
+on.arrowKey("down")
+on.arrowKey("down")
+paint()
+local selectedResults, selectedY = pixels, highlightedY
+assert(selectedY and selectedY>firstResultY)
+on.enterKey()
+has("Esc назад")
+on.escapeKey()
+expectSameScreen(selectedResults)
+assert(highlightedY==selectedY)
+
+on.tabKey()
+has("Фильтр · Теория", height-31)
+has("Теория", firstResultY)
+on.arrowKey("right")
+has("Фильтр · Решатели", height-31)
+has("Решатель", firstResultY)
+on.tabKey()
+has("Фильтр · Как решать", height-31)
+has("Тест Уайта по шагам", firstResultY)
+has("Разбор", firstResultY)
+on.arrowKey("left")
+has("Фильтр · Решатели", height-31)
+on.arrowKey("left")
+on.arrowKey("left")
+expectSameScreen(allResults)
+on.tabKey()
+on.charIn("x")
+has("Фильтр · Все", height-31)
+on.backspaceKey()
+expectSameScreen(allResults)
+on.escapeKey()
+has("Как решать", 4)
+on.arrowKey("left")
+has("Практика", 4)
+
 on.charIn("absentkeyword")
 has("Совпадений нет")
+on.enterKey()
+has("Общий поиск", 4)
 on.escapeKey()
 on.charIn("аб")
 on.backspaceKey()
 has("Поиск: а")
-on.escapeKey()
+on.backspaceKey()
+has("Практика", 4)
 on.charIn("Ёж Φαβγ χ² ᵀᵢ₀₁₋ₜⱼ −≈≠≥")
 has("Ёж Φαβγ χ² ᵀᵢ₀₁₋ₜⱼ −≈≠≥")
 on.escapeKey()
-expectFirstResult("raschyot lm lineynoy", "Расчёт LM Уайта")
-expectFirstResult("raschet lm lineinoi", "Расчёт LM Уайта")
-on.tabKey()
-has("Как решать", 4)
 local walkthrough = "Серии остатков: от знаков к выводу"
-expectFirstResult("runs", walkthrough)
-expectFirstResult("серии остатков", walkthrough)
+expectResult("runs", "Серии остатков", "Разбор")
+expectResult("серии остатков", "Серии остатков", "Разбор")
 on.charIn("serii ostatkov")
-has(walkthrough, firstResultY)
+selectResult("Серии остатков", "Разбор")
 on.enterKey()
 has(walkthrough, 4)
-on.escapeKey()
-on.tabKey()
-has("Теория", 4)
-has("Поиск: serii ostatkov", 23)
-on.arrowKey("left")
-has("Как решать", 4)
-has(walkthrough, firstResultY)
-on.arrowKey("left")
-has("Практика", 4)
-on.arrowKey("right")
-has("Как решать", 4)
-has(walkthrough, firstResultY)
-on.arrowKey("right")
-has("Теория", 4)
-on.arrowKey("right")
-has("Практика", 4)
-on.arrowKey("left")
-has("Теория", 4)
-on.escapeKey()
-for ch in ("uayta"):gmatch(".") do on.charIn(ch) end
-has("Тест Уайта", firstResultY)
-on.tabKey()
-has("Поиск: uayta")
-has("Расчёт LM Уайта", firstResultY)
-on.enterKey()
-has("Расчёт LM Уайта", 4)
-on.charIn("c")
-assert(copied=="krdiag\\white(40,0.25,5,11.070)",copied)
 on.escapeKey(); on.escapeKey()
 width=320
-expectFirstResult("rexact", "Точный критерий серий")
+expectResult("rexact", "Точный критерий серий")
 on.charIn("krdiag\\rexact(")
 has("Точный критерий серий", firstResultY)
+has("Решатель", firstResultY)
 on.enterKey()
 has("H помощь   C копия", height-31)
 on.charIn("h")
@@ -185,17 +220,15 @@ has("Esc / H назад", height-15)
 on.escapeKey()
 has("Точный критерий серий", 4)
 on.charIn("c")
-assert(copied=="krdiag\\rexact({-2,-1,3,4},0.05,0)",copied)
-has("Скопировано 1/1", height-15)
+assert(copied and copied:match("^krdiag\\rexact%b()$") and copied:find("%d"),copied)
+has("Скопировано 1/", height-15)
 has("H помощь   C копия", height-31)
 on.escapeKey(); on.escapeKey()
 on.charIn("KREXTRA\\OLS(")
-has("МНК по данным. Общий пример", firstResultY)
+has("Решатель", firstResultY)
 on.enterKey()
 on.charIn("C")
-assert(copied=="krextra\\ols(y,x)",copied)
-on.charIn("c")
-assert(copied=="krextra\\resid(y,x)",copied)
+assert(copied and copied:match("^krextra\\ols%b()$") and copied:find("%d"),copied)
 width,height=245,155
 paint()
 on.arrowKey("right")
@@ -203,13 +236,11 @@ paint()
 local scrolledCard = pixels
 on.charIn("H")
 has("Слева от \\ — библиотека krextra.")
-has("Справа от \\ — функция resid.")
+has("Справа от \\ — функция ols.")
 on.arrowKey("right")
 has("Перед Enter замените шаблоны")
 on.charIn("h")
 expectSameScreen(scrolledCard)
-on.charIn("c")
-assert(copied=="krextra\\olssum(y,x)",copied)
 for i=1,25 do on.arrowKey("right"); paint() end
 on.arrowKey("left"); paint()
 on.escapeKey(); on.escapeKey()
