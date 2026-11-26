@@ -755,16 +755,16 @@ If x&gt;5 Then     ✅ правильно
 
 ### Рабочие примеры в репозитории
 
-- `examples/linalg/Problem.xml` — сложные программы с выводом
-- `examples/econ/Problem1.xml` — простые функции с проверками
+- [Пример линейной алгебры](../../../examples/linalg/Problem.xml) — сложные программы с выводом
+- [Библиотека econ](../../../libs/econ/Problem1.xml) — простые функции с проверками
 - Ваши собственные библиотеки после отладки
 
 ### Документация ошибок
 
-- `docs/delta.md` — базовые правила форматирования
-- `docs/delta2.md` — отладка leontief (If-Then)
-- `docs/delta3.md` — проблемы gomory v0.1-v2.2.1
-- `docs/delta4.md` — локальные переменные в циклах
+- [delta.md](delta.md) — базовые правила форматирования
+- [delta2.md](delta2.md) — отладка leontief (If-Then)
+- [delta3.md](delta3.md) — проблемы gomory v0.1-v2.2.1
+- [delta4.md](delta4.md) — локальные переменные в циклах
 
 ---
 

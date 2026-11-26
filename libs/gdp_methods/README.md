@@ -1,136 +1,24 @@
-# Библиотека gdp_methods для TI-Nspire
+# Three approaches to GDP
 
-Справочная библиотека по расчёту ВВП тремя методами с типовым примером.
+`gdp_methods` is a TI-Nspire CAS library that displays a worked GDP accounting exercise. The example follows wheat from a farm to a bakery and covers value added, spending and income. The calculator output uses transliterated Russian.
 
-## Файлы
+## Build and run
 
-- `Document.xml` - конфигурационный файл
-- `Problem1.xml` - код программ
-- `build/gdp_methods.tns` - готовая библиотека
+From the repository root, run `./scripts/build.sh gdp_methods`. Copy `build/gdp_methods.tns` to the handheld's `MyLib` folder, then select **Doc > Refresh Libraries**. [Library installation](../README.md)
 
-## Установка на калькулятор
+Run the worked calculation in a Calculator page.
 
-1. Собрать библиотеку: `./scripts/build.sh gdp_methods`
-2. Скопировать `build/gdp_methods.tns` в папку `/MyLib` на калькуляторе
-3. Нажать **Ctrl+Home** → **Refresh Libraries**
-4. Программы доступны в Catalog как `gdp_methods\program_name()`
-
-## Программы
-
-### `gdp_methods\version()`
-
-Возвращает версию библиотеки.
-
-**Пример:**
-```
-gdp_methods\version()
-→ "1.0.0"
-```
-
-### `gdp_methods\guide()`
-
-Отображает справочник по трём методам расчёта ВВП:
-
-**Содержание:**
-- Общие правила (4 пункта)
-- Метод 1: По добавленной стоимости (DS)
-- Метод 2: По расходам (C + I + NX)
-- Метод 3: По доходам (Зарплата + Прибыль)
-
-**Пример использования:**
-```
-gdp_methods\guide()
-```
-
-### `gdp_methods\example()`
-
-Показывает типовой пример задачи (пшеница → хлеб):
-
-**Данные примера:**
-- Производство пшеницы: 50 000 ц × $3 = 150 000
-- Прирост запасов: 5 000 ц × $3 = 15 000
-- Экспорт пшеницы: 25 000 ц × $3 = 75 000
-- Продано хлеба: 50 000 бат. × $2 = 100 000
-- Импорт хлеба: 15 000 бат. × $1 = 15 000
-- Затраты пекаря на пшеницу: 20 000 ц × $3 = 60 000
-- Зарплата фермера: 50 000
-- Зарплата пекаря: 20 000
-
-**Пример использования:**
-```
-gdp_methods\example()
-```
-
-### `gdp_methods\calculate()`
-
-Показывает расчёт ВВП тремя методами для типового примера:
-
-**Метод 1 (по DS):**
-- DS фермера: 150k + 15k - 0 = 165k
-- DS пекаря: 100k + 0 - 60k = 25k
-- **GDP = 190k**
-
-**Метод 2 (по расходам):**
-- C = 100k + 15k = 115k
-- I = 15k
-- NX = 75k - 15k = 60k
-- **GDP = 190k**
-
-**Метод 3 (по доходам):**
-- Зарплата = 50k + 20k = 70k
-- Прибыль фермера = 150k + 15k - 50k = 115k
-- Прибыль пекаря = 100k - 60k - 20k = 5k
-- **GDP = 190k**
-
-**Пример использования:**
-```
+```text
 gdp_methods\calculate()
 ```
 
-## Формулы
+The program displays the same GDP of 190,000 from all three approaches. Each program takes zero arguments and prints prepared lesson text. For functions that take values from your own exercise, see [GDP and price index formulas](../gdp_other/README.md).
 
-### Метод 1: По добавленной стоимости
-```
-GDP = DS₁ + DS₂ + ...
-DS = Выручка + ΔЗапасы×Цена - Промежуточные затраты
-```
+## Library objects
 
-### Метод 2: По расходам
-```
-GDP = C + I + NX
-C = расходы на конечные товары
-I = прирост запасов × цена
-NX = Экспорт - Импорт
-```
+- `guide()` summarizes the accounting rules.
+- `example()` displays the quantities, prices and wages used in the example.
+- `calculate()` shows the arithmetic for each of the three approaches.
+- `version()` returns `"1.0.0"`.
 
-### Метод 3: По доходам
-```
-GDP = Зарплата + Прибыль
-Прибыль = Выручка + ΔЗапасы×Цена - Сырьё - Зарплата
-```
-
-## Транслитерация
-
-Библиотека использует транслитерацию русских терминов латиницей (калькулятор не поддерживает кириллицу):
-
-- `DS` - добавленная стоимость
-- `Vyruchka` - выручка
-- `dZ` - дельта запасы (прирост)
-- `Promezhut.zatraty` - промежуточные затраты
-- `C` - потребление (consumption)
-- `I` - инвестиции (investment)
-- `NX` - чистый экспорт (net export)
-- `ZP` - зарплата
-- `Prib` - прибыль
-
-## Пересборка
-
-```bash
-./scripts/build.sh gdp_methods
-```
-
-Создаст файл `build/gdp_methods.tns`.
-
-## Версия
-
-**v1.0.0** - Первый релиз (2025-12-08)
+[TI-BASIC source](Problem1.xml) · [Original Russian notes](README.ru.md)

@@ -1,79 +1,31 @@
-# Библиотека econ для TI-Nspire
+# Economics formulas
 
-Библиотека экономических формул для расчёта макроэкономических показателей.
+`econ` is a TI-Nspire CAS library for GDP, price indices and growth rates. Its functions take numbers or TI-Nspire lists, depending on the calculation.
 
-## Файлы
+## Build and run
 
-- `Document.xml` - конфигурационный файл
-- `Problem1.xml` - код функций
+From the repository root, run `./scripts/build.sh econ`. Copy `build/econ.tns` to the handheld's `MyLib` folder, then select **Doc > Refresh Libraries**. [Library installation](../README.md)
 
-## Установка на калькулятор
+In a Calculator page, this calculates the CPI for a basket that went from 100 to 150 in cost.
 
-1. Собрать библиотеку: `./scripts/build.sh econ`
-2. Скопировать `build/econ.tns` в папку `/MyLib` на калькуляторе
-3. Нажать **Ctrl+Home** → **Refresh Libraries**
-4. Функции доступны в Catalog как `econ\function_name()`
-
-## Функции
-
-### `econ\version()`
-
-Возвращает версию библиотеки.
-
-### `econ\nominal_gdp(prices, quantities)`
-
-Рассчитывает номинальный ВВП.
-
-**Пример:**
-```
-econ\nominal_gdp({10,20,30}, {5,3,2})
-→ 170
+```text
+econ\cpi(150,100)
 ```
 
-### `econ\real_gdp(base_prices, quantities)`
+The result is 150, with the base period indexed to 100.
 
-Рассчитывает реальный ВВП на основе базовых цен.
+## Library objects
 
-### `econ\gdp_deflator(nominal, real)`
+- `nominal_gdp(prices,quantities)` sums current prices times current quantities.
+- `real_gdp(base_prices,quantities)` values current quantities at base-period prices.
+- `gdp_deflator(nominal,real)` returns nominal GDP divided by real GDP, multiplied by 100.
+- `basket_cost(prices,quantities)` values a basket at the supplied prices.
+- `cpi(cost_current,cost_base)` returns the current basket cost divided by the base cost, multiplied by 100.
+- `cpi_from_baskets(p_current,p_base,quantities)` computes the same index from two price lists and a fixed quantity list.
+- `inflation_rate(cpi_current,cpi_previous)` returns the percentage change in CPI.
+- `growth_rate(old_value,new_value)` returns the percentage change from the first value to the second.
+- `version()` returns `"1.0.0"`. `help()` displays the function list.
 
-Рассчитывает дефлятор ВВП.
+Use equal-length lists for prices and quantities. The calculation functions return `undef` for unequal list lengths or a zero denominator.
 
-**Формула:** (Номинальный ВВП / Реальный ВВП) × 100
-
-### `econ\cpi(cost_current, cost_base)`
-
-Рассчитывает индекс потребительских цен (CPI).
-
-**Формула:** (Текущая стоимость / Базовая стоимость) × 100
-
-### `econ\inflation_rate(cpi_current, cpi_previous)`
-
-Рассчитывает уровень инфляции.
-
-**Формула:** ((CPI текущий - CPI предыдущий) / CPI предыдущий) × 100
-
-### `econ\basket_cost(prices, quantities)`
-
-Рассчитывает стоимость потребительской корзины.
-
-### `econ\cpi_from_baskets(p_current, p_base, quantities)`
-
-Рассчитывает CPI на основе корзин с текущими и базовыми ценами.
-
-### `econ\growth_rate(old_value, new_value)`
-
-Рассчитывает темп роста.
-
-**Формула:** ((Новое значение - Старое значение) / Старое значение) × 100
-
-### `econ\help()`
-
-Выводит справку по библиотеке.
-
-## Сборка
-
-```bash
-./scripts/build.sh econ
-```
-
-Создаст файл `build/econ.tns`.
+[TI-BASIC source](Problem1.xml) · [Original Russian notes](README.ru.md)

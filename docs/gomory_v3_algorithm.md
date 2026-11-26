@@ -2,7 +2,7 @@
 
 ## Overview
 
-This implementation follows the lecture version of the Gomory cutting plane algorithm with optimal mu selection and Z-row cuts. It represents a significant upgrade from v2.3.0, implementing the generalized cut formula that provides stronger cuts and better convergence.
+These legacy implementation notes describe the lecture version of the Gomory cutting plane algorithm with optimal mu selection, Z-row cuts, and the generalized cut formula. See the [engineering notes](engineering-notes.md) for the earlier tableau debugging cases.
 
 ## Algorithm Structure
 
@@ -552,10 +552,8 @@ Add cut to tableau and resolve with dual simplex.
 
 ## File Locations
 
-- **Implementation:** `/Users/mkalinin/Documents/Code/ti_program_build/libs/gomory/Problem1.xml`
-- **Build script:** `/Users/mkalinin/Documents/Code/ti_program_build/scripts/build.sh`
-- **Test plan:** `/Users/mkalinin/Documents/Code/ti_program_build/test_gomory_v3.md`
-- **This document:** `/Users/mkalinin/Documents/Code/ti_program_build/docs/gomory_v3_algorithm.md`
+- [Gomory implementation](../libs/gomory/Problem1.xml)
+- [Library build script](../scripts/build.sh)
 
 ## References
 

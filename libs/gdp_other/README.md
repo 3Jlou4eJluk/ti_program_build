@@ -1,233 +1,33 @@
-# Библиотека gdp_other для TI-Nspire
+# GDP and price index formulas
 
-Библиотека быстрых формул для экономических расчётов:
-- GDP (по расходам, дефлятор, реальный)
-- Добавленная стоимость и прибыль фирмы
-- CPI и инфляция
-- Индекс Фишера
-- Реальный доход и покупательная способность
+`gdp_other` is a TI-Nspire CAS library for quick calculations involving national accounts, price indices, real income and purchasing power.
 
-## Файлы
+## Build and run
 
-- `build/gdp_other.tns` - готовая библиотека для калькулятора
-- `libs/gdp_other/Document.xml` - конфигурационный файл
-- `libs/gdp_other/Problem1.xml` - код функций
+From the repository root, run `./scripts/build.sh gdp_other`. Copy `build/gdp_other.tns` to the handheld's `MyLib` folder, then select **Doc > Refresh Libraries**. [Library installation](../README.md)
 
-## Установка на калькулятор
+In a Calculator page, enter household consumption, investment, government spending, exports and imports in that order.
 
-1. Скопировать `build/gdp_other.tns` в папку `/MyLib` на калькуляторе
-2. Нажать **Ctrl+Home** → **Refresh Libraries**
-3. Функции доступны в Catalog как `gdp_other\function_name()`
-
-## Функции
-
-### `gdp_other\version()`
-
-Возвращает версию библиотеки.
-
-**Пример:**
-```
-gdp_other\version()
-→ "1.0.0"
+```text
+gdp_other\gdp_r(115,15,0,75,15)
 ```
 
-### `gdp_other\gdp_r(c,i,g,x,m)`
+The result is 190.
 
-Вычисляет GDP по расходам (expenditure approach).
+## Library objects
 
-**Формула:** GDP = C + I + G + X - M
+- `gdp_r(c,i,g,x,m)` computes expenditure GDP as `c+i+g+x-m`.
+- `ds(vyp,pp)` subtracts intermediate consumption from gross output to get value added.
+- `profit(vyr,syr,zp)` subtracts input costs and wages from sales revenue.
+- `cpi(pn,p0,q)` computes the Laspeyres price index from current prices, base prices and fixed quantities.
+- `infl(cpi1,cpi0)` computes the percentage change from the earlier CPI to the current CPI.
+- `defl(nom,real)` computes the GDP deflator as `100*nom/real`.
+- `rgdp(nom,def)` recovers real GDP from nominal GDP and a deflator on a base-100 scale.
+- `fisher(lasp,paas)` takes the geometric mean of the Laspeyres and Paasche indices.
+- `rinc(nom,cpi)` divides nominal income by `cpi/100`.
+- `pp(cpi)` returns purchasing power relative to the base period as `100/cpi`.
+- `version()` returns `"1.0.0"`.
 
-**Параметры:**
-- `c` - потребление (consumption)
-- `i` - инвестиции (investment)
-- `g` - государственные расходы (government spending)
-- `x` - экспорт (exports)
-- `m` - импорт (imports)
+Use equal-length price and quantity lists and supply nonzero denominators.
 
-**Пример:**
-```
-gdp_other\gdp_r(100,50,30,40,20)
-→ 200
-```
-
-### `gdp_other\ds(vyp,pp)`
-
-Вычисляет добавленную стоимость (value added).
-
-**Формула:** DS = Выпуск - Промежуточное потребление
-
-**Параметры:**
-- `vyp` - валовой выпуск (выручка)
-- `pp` - промежуточное потребление
-
-**Пример:**
-```
-gdp_other\ds(1000,600)
-→ 400
-```
-
-### `gdp_other\profit(vyr,syr,zp)`
-
-Вычисляет прибыль фирмы.
-
-**Формула:** Прибыль = Выручка - Издержки - Зарплата
-
-**Параметры:**
-- `vyr` - выручка
-- `syr` - издержки
-- `zp` - зарплата
-
-**Пример:**
-```
-gdp_other\profit(1000,600,200)
-→ 200
-```
-
-### `gdp_other\cpi(pn,p0,q)`
-
-Вычисляет индекс потребительских цен (CPI) по методу Ласпейреса.
-
-**Формула:** CPI = (Σ(pn·q) / Σ(p0·q)) × 100
-
-**Параметры:**
-- `pn` - список текущих цен
-- `p0` - список базовых цен
-- `q` - список базовых количеств
-
-**Пример:**
-```
-gdp_other\cpi({5,10,10.5},{1,1,1.05},{5,3,3})
-→ 500
-```
-
-### `gdp_other\infl(cpi1,cpi0)`
-
-Вычисляет уровень инфляции.
-
-**Формула:** π = ((CPI₁ - CPI₀) / CPI₀) × 100%
-
-**Параметры:**
-- `cpi1` - CPI текущего периода
-- `cpi0` - CPI базового периода
-
-**Пример:**
-```
-gdp_other\infl(110,100)
-→ 10
-```
-
-### `gdp_other\defl(nom,real)`
-
-Вычисляет дефлятор ВВП.
-
-**Формула:** Deflator = (GDP_nominal / GDP_real) × 100
-
-**Параметры:**
-- `nom` - номинальный ВВП
-- `real` - реальный ВВП
-
-**Пример:**
-```
-gdp_other\defl(110,100)
-→ 110
-```
-
-### `gdp_other\rgdp(nom,def)`
-
-Вычисляет реальный ВВП.
-
-**Формула:** GDP_real = (GDP_nominal / Deflator) × 100
-
-**Параметры:**
-- `nom` - номинальный ВВП
-- `def` - дефлятор ВВП
-
-**Пример:**
-```
-gdp_other\rgdp(110,110)
-→ 100
-```
-
-### `gdp_other\fisher(lasp,paas)`
-
-Вычисляет индекс Фишера.
-
-**Формула:** I_F = √(Laspeyres × Paasche)
-
-**Параметры:**
-- `lasp` - индекс Ласпейреса
-- `paas` - индекс Пааше
-
-**Пример:**
-```
-gdp_other\fisher(110,105)
-→ 107.47
-```
-
-### `gdp_other\rinc(nom,cpi)`
-
-Вычисляет реальный доход.
-
-**Формула:** Real Income = Nominal / (CPI/100)
-
-**Параметры:**
-- `nom` - номинальный доход
-- `cpi` - индекс потребительских цен
-
-**Пример:**
-```
-gdp_other\rinc(1000,110)
-→ 909.09
-```
-
-### `gdp_other\pp(cpi)`
-
-Вычисляет покупательную способность валюты.
-
-**Формула:** PP = 100 / CPI
-
-**Параметры:**
-- `cpi` - индекс потребительских цен
-
-**Пример:**
-```
-gdp_other\pp(110)
-→ 0.909
-```
-
-## Примеры использования
-
-### Расчёт ВВП по расходам
-
-```
-Define c:=100
-Define i:=50
-Define g:=30
-Define x:=40
-Define m:=20
-gdp_other\gdp_r(c,i,g,x,m)
-→ 200
-```
-
-### Расчёт CPI для корзины товаров
-
-```
-Define p2000:={1,1,1.05}
-Define p2010:={5,10,10.5}
-Define q:={5,3,3}
-gdp_other\cpi(p2010,p2000,q)
-→ 500
-```
-
-### Расчёт инфляции
-
-```
-gdp_other\infl(110,100)
-→ 10  (10% инфляция)
-```
-
-## Пересборка
-
-```bash
-./scripts/build.sh gdp_other
-```
+[TI-BASIC source](Problem1.xml) · [Original Russian notes](README.ru.md)

@@ -1,56 +1,15 @@
-#!/bin/bash
-# Build all TI-Nspire libraries and Lua programs
-
-set -e
-
-LIBS_DIR="libs"
-LUA_DIR="lua"
-BUILD_SCRIPT="scripts/build.sh"
-BUILD_LUA_SCRIPT="scripts/build-lua.sh"
-
-echo "=== Building all TI-Nspire programs ==="
-echo ""
-
-# Clean build directory
-echo "Cleaning build directory..."
-rm -f build/*.tns
-echo "✓ Build directory cleaned"
-echo ""
-
-# Get list of libraries
-LIBRARIES=$(ls -1 "$LIBS_DIR")
-
-if [ -z "$LIBRARIES" ]; then
-    echo "No libraries found in $LIBS_DIR"
-    exit 1
-fi
-
-# Build each library
-for lib in $LIBRARIES; do
-    echo "────────────────────────────────────────"
-    $BUILD_SCRIPT "$lib"
-    echo ""
+#!/usr/bin/env bash
+set -eu
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+source "$ROOT/scripts/luna.sh"
+LUNA=$(find_luna)
+export LUNA
+for source_dir in "$ROOT"/libs/*/Document.xml; do
+    dir=${source_dir%/Document.xml}
+    "$ROOT/scripts/build.sh" "${dir##*/}"
 done
-
-echo "════════════════════════════════════════"
-echo "✓ All libraries built successfully"
-echo ""
-
-# Build Lua programs
-echo "=== Building Lua programs ==="
-echo ""
-
-for lua_file in "$LUA_DIR"/*.lua; do
-    if [ -f "$lua_file" ]; then
-        lua_name=$(basename "$lua_file" .lua)
-        echo "────────────────────────────────────────"
-        $BUILD_LUA_SCRIPT "$lua_name"
-        echo ""
-    fi
+for source_file in "$ROOT"/lua/*.lua; do
+    name=${source_file##*/}
+    "$ROOT/scripts/build-lua.sh" "${name%.lua}"
 done
-
-echo "════════════════════════════════════════"
-echo "✓ All programs built successfully"
-echo ""
-echo "Built files:"
-ls -lh build/*.tns
+python3 "$ROOT/examples/econometrics/build.py" --luna "$LUNA"

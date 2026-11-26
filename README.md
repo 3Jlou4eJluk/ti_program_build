@@ -1,205 +1,52 @@
-# TI-Nspire Library Builder
+# TI-Nspire workarounds
 
-Проект для разработки и сборки пользовательских библиотек для калькулятора TI-Nspire CAS.
+Build TI-BASIC libraries and Lua documents as `.tns` files on a desktop. This repository covers three problems that show up on a handheld: getting TI OS to register a generated library, displaying Cyrillic through a bitmap font, and searching Russian text from a Latin keypad. The examples include source files, build scripts and screenshots from [Firebird](https://github.com/nspire-emus/firebird).
 
-## Структура проекта
+![Latin-keypad search for a Russian term on TI OS](examples/econometrics/tests/evidence/search.png)
 
-```
-ti_program_build/
-├── libs/                      # Исходники библиотек (TI-BASIC)
-│   ├── econ/                  # Библиотека экономических формул
-│   │   ├── Document.xml
-│   │   ├── Problem1.xml
-│   │   └── README.md
-│   └── leontief/              # Библиотека модели Леонтьева
-│       ├── Document.xml
-│       ├── Problem1.xml
-│       └── README.md
-├── lua/                       # Lua программы
-│   ├── economics.lua          # Экономический калькулятор
-│   └── README.md              # Документация по Lua
-├── build/                     # Собранные .tns файлы
-│   ├── econ.tns               # Библиотеки
-│   ├── leontief.tns
-│   └── economics.tns          # Экономический калькулятор (Lua)
-├── examples/                  # Примеры библиотек для изучения
-│   ├── linalg/                # Линейная алгебра (официальный пример)
-│   └── numtheory/             # Теория чисел (официальный пример)
-├── tools/                     # Инструменты сборки
-│   └── Luna/                  # Luna - компилятор TI-Nspire
-├── scripts/                   # Скрипты сборки
-│   ├── build.sh               # Сборка одной библиотеки (TI-BASIC)
-│   ├── build-all.sh           # Сборка всех библиотек
-│   └── build-lua.sh           # Сборка Lua программы
-└── docs/                      # Документация
-    ├── delta.md               # Базовые правила форматирования
-    └── delta2.md              # Отладка и решение проблем
-```
+## Build a document
 
-## Быстрый старт
+Use Bash, Git, Make, a C compiler and the zlib development headers. Python 3 is also required for the generated example. From the repository root, build [Luna](https://github.com/ndless-nspire/Luna) at the revision used for the tested documents.
 
-### 1. Сборка Luna (первый раз)
-
-```bash
-cd tools/Luna
-make
-cd ../..
-```
-
-### 2. Сборка библиотеки
-
-Сборка одной библиотеки:
-```bash
+```sh
+git clone https://github.com/ndless-nspire/Luna.git tools/Luna
+git -C tools/Luna checkout a9924a9a968954eba9adcc161a58ac607f97ce8c
+make -C tools/Luna
 ./scripts/build.sh econ
-# или
-./scripts/build.sh leontief
-```
-
-Сборка всех библиотек:
-```bash
-./scripts/build-all.sh
-```
-
-### 3. Сборка Lua программы
-
-```bash
 ./scripts/build-lua.sh economics
 ```
 
-### 4. Установка на калькулятор
+The first script packages `libs/econ/Document.xml` and `Problem1.xml` as `build/econ.tns`. The second turns a standalone Lua script into `build/economics.tns`. To use an existing Luna installation, run e.g. `LUNA=/path/to/luna ./scripts/build.sh econ`. Run `./scripts/build-all.sh` to build every library, both standalone Lua documents and the econometrics example.
 
-1. Подключите TI-Nspire к компьютеру
-2. Скопируйте `build/<library>.tns` в папку `/MyLib` на калькуляторе
-3. На калькуляторе: **Ctrl+Home** → **Refresh Libraries**
-4. Библиотека доступна в Catalog
+## Workarounds by symptom
 
-## Доступные библиотеки
+| What happens on the calculator | Where to look |
+| --- | --- |
+| A generated document opens, but a library function is missing after Refresh Libraries | Check the symbol XML, line separators and reserved TI names. Start with the [format and debugging guide](docs/README.md). |
+| Cyrillic labels do not render with the system font | The [Lua handbook](examples/econometrics/handbook.lua) draws glyphs from a [bitmap table](examples/econometrics/font.lua). The same glyph widths drive wrapping and scrolling. |
+| The keyboard has no Cyrillic keys | The handbook indexes titles, tags and body text in transliteration. Typing `smeshchenie` or `smeschenie` finds «Смещение». [On-device example and controls](examples/econometrics/README.md) |
+| The desktop build succeeds, but a calculation fails on TI OS | Use the [on-device smoke test](examples/econometrics/tests/krcheck.lua) to call the installed libraries through the calculator's own math engine. [Recorded result](examples/econometrics/tests/evidence/c-result1.png) |
 
-### econ - Экономические формулы
+## Install the working example
 
-Расчёт макроэкономических показателей: ВВП, CPI, инфляция, темп роста.
+[Download the econometrics example](https://github.com/3Jlou4eJluk/ti_program_build/raw/refs/heads/main/downloads/econometrics-cx-ii-t.zip). Extract it on your computer. Copy the four files in `MyLib/` to the calculator's `MyLib` folder, copy `krguide.tns` to a document folder, then select **Doc → Refresh Libraries**. Open the handbook, or enter this call in Calculator to get the area under a step ROC curve and its Gini coefficient.
 
-**Документация:** [libs/econ/README.md](libs/econ/README.md)
-
-**Пример:**
-```
-econ\cpi(150, 100)
-→ 150
+```text
+krroc\steparea({0,.3,1},{.3,1})  →  {.79,.58}
 ```
 
-### leontief - Модель Леонтьева
+The example targets the **TI-Nspire CX II-T without CAS**. The recorded Firebird run used a **first-generation TI-Nspire CX without CAS, OS 4.5.5.79**, and passed **55 of 55** numerical checks. It also exercised Cyrillic rendering, transliterated input and copying a function call. To repeat the checks on a CX II-T, place the [test document](https://github.com/3Jlou4eJluk/ti_program_build/raw/refs/heads/main/downloads/krcheck.tns) in a regular documents folder after installation, open it and press **Enter**. A run on the exact CX II-T model is still pending. [Handheld model](examples/econometrics/tests/evidence/model.png) · [OS version](examples/econometrics/tests/evidence/os-version.png)
 
-Проверка продуктивности матриц по модели межотраслевого баланса Леонтьева.
+## Source map
 
-**Документация:** [libs/leontief/README.md](libs/leontief/README.md)
+| Path | Contents |
+| --- | --- |
+| [docs/](docs/README.md) | File-format details, TI OS debugging and historical engineering notes |
+| [examples/econometrics/](examples/econometrics/) | A complete non-CAS example with a Russian-language interface, generated TI-BASIC libraries, desktop checks and emulator evidence |
+| [libs/](libs/README.md) | Earlier TI-BASIC examples for macroeconomics, input–output models and integer programming |
+| [lua/](lua/README.md) | Standalone Lua examples using calculator events and graphics |
+| [examples/linalg/](examples/linalg/) and [examples/numtheory/](examples/numtheory/) | Small XML examples for studying the document structure |
 
-**Пример:**
-```
-leontief\is_productive([[0.04,0.02,0.06],[0.10,0.14,0.06],[0.06,0.04,0.08]])
-→ 1
-```
+## Licensing
 
-## Lua программы
-
-### economics - Экономический калькулятор
-
-Полнофункциональная Lua программа с текстовым интерфейсом для экономических расчётов.
-
-**Документация:** [lua/README.md](lua/README.md)
-
-**Функции:**
-- **ВВП:**
-  - Номинальный и реальный ВВП
-  - Дефлятор ВВП
-  - Реальный ВВП
-- **ИПЦ и инфляция:**
-  - Индекс Ласпейреса (ИПЦ)
-  - Индекс Пааше
-  - Индекс Фишера
-  - Инфляция
-  - Реальный доход
-  - Покупательная способность
-
-**Примечание:** Модель Леонтьева реализована в библиотеке `leontief` (см. выше).
-
-**Использование:**
-1. Собрать: `./scripts/build-lua.sh economics`
-2. Скопировать `build/economics.tns` на калькулятор
-3. Открыть файл на калькуляторе
-4. Навигация: ↑↓ - выбор, Enter - открыть, ESC - назад, Tab - переход между полями
-
-## Создание новой библиотеки
-
-### Шаг 1: Создайте структуру
-
-```bash
-mkdir libs/mylib
-```
-
-### Шаг 2: Создайте файлы
-
-**libs/mylib/Document.xml:**
-```xml
-<?xml version="1.0" encoding="UTF-8" ?><doc ver="1.0"><settings>...</settings><nps>1</nps></doc>
-```
-
-Скопируйте из `libs/econ/Document.xml` и адаптируйте при необходимости.
-
-**libs/mylib/Problem1.xml:**
-```xml
-<?xml version="1.0" encoding="UTF-8" ?><prob xmlns="urn:TI.Problem" ver="1.0"><sym>
-<e t="6" f="65536"><n>version</n><p></p><v>Func&#13;:Return "1.0.0"&#13;:EndFunc</v></e>
-<e t="6" f="65536"><n>myfunction</n><p>x</p><v>Func&#13;:Return x*2&#13;:EndFunc</v></e>
-</sym><card>...</card></prob>
-```
-
-### Шаг 3: Соберите и протестируйте
-
-```bash
-./scripts/build.sh mylib
-```
-
-### Шаг 4: Создайте README.md
-
-```bash
-cp libs/econ/README.md libs/mylib/README.md
-# Отредактируйте под вашу библиотеку
-```
-
-## Документация
-
-- **[docs/delta.md](docs/delta.md)** - Базовые правила форматирования TI-Nspire библиотек
-- **[docs/delta2.md](docs/delta2.md)** - Отладка и решение проблем
-- **[examples/](examples/)** - Официальные примеры библиотек от TI
-
-## Важные правила
-
-1. **Всегда используйте `Then` после `If`:**
-   ```
-   If условие Then
-   :команды
-   :EndIf
-   ```
-
-2. **XML-экранирование операторов:**
-   - `<` → `&lt;`
-   - `>` → `&gt;`
-   - `&` → `&amp;`
-
-3. **Используйте `&#13;` для переноса строк** в XML
-
-4. **Func vs Prgm:**
-   - `Func` - функции для вычислений (не могут использовать `Disp`)
-   - `Prgm` - программы с выводом (могут использовать `Disp`)
-
-## Требования
-
-- Linux/macOS/WSL
-- GCC компилятор (для сборки Luna)
-- zlib development headers (`zlib1g-dev` на Ubuntu/Debian)
-
-## Лицензия
-
-Luna - см. `tools/Luna/LICENSE`
-
-Библиотеки - MIT License
+The original project README identifies the calculator libraries as MIT-licensed. Luna is distributed separately under MPL 1.1. The bitmap font in the example includes its SIL Open Font License notice.
