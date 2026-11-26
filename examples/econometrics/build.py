@@ -54,6 +54,8 @@ def read_cards():
             keys = ['section', 'title', 'tags', 'body', 'description']
             if card['section'] == 'guide':
                 keys.extend(('example', 'variant'))
+            else:
+                keys.append('intuition')
             fields = {key: card[key].strip() for key in keys}
             if not all(fields.values()):
                 raise ValueError(f'{path}: empty card field')
@@ -62,7 +64,8 @@ def read_cards():
                 fields['body'] = (fields['description'] + '\n\nПример задачи. ' + fields['example']
                                   + '\n\n' + fields['body'] + '\n\n' + fields.pop('variant'))
             else:
-                fields['body'] = fields['description'] + '\n\n' + fields['body']
+                fields['body'] = ('Интуиция. ' + fields.pop('intuition') + '\n\n'
+                                  + fields['description'] + '\n\n' + fields['body'])
                 fields['scope'] = ('Расширение курса' if path.stem in ('extra', 'connections')
                                    else 'Тема с фото')
             yield fields

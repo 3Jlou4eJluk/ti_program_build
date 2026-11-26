@@ -54,11 +54,11 @@ local function raster(value)
     return points, width
 end
 
-local function shows(value, rowY)
+local function shows(value, rowY, columnX)
     local points, textWidth = raster(value)
     local first = points[1]
     for y=rowY or 0,rowY or height-14 do
-        for x=0,width-textWidth do
+        for x=columnX or 0,columnX or width-textWidth do
             local color=pixels[(y+first[2])*width+x+first[1]]
             if color then
                 local hit=true
@@ -80,11 +80,21 @@ local function has(value, rowY)
     assert(shows(value,rowY), "Missing rasterized text: "..value)
 end
 
+local function showsType(kind, rowY)
+    local _, kindWidth = raster(kind)
+    return shows(kind,rowY,width-5-kindWidth)
+end
+
+local function hasType(kind, rowY)
+    paint()
+    assert(showsType(kind,rowY), "Missing right-aligned type: "..kind)
+end
+
 local function selectResult(title, kind)
     for _=1,100 do
         paint()
         if not highlightedY then break end
-        if shows(title,highlightedY) and (not kind or shows(kind,highlightedY)) then return end
+        if shows(title,highlightedY) and (not kind or showsType(kind,highlightedY)) then return end
         on.arrowKey("down")
     end
     error("Missing search result: "..title)
@@ -101,6 +111,32 @@ has("Теория", 4)
 has("← → / Tab", height-31)
 has("Теория · Практика · Как решать", height-31)
 has("↑ ↓ выбор   Enter открыть", height-15)
+for _, viewport in ipairs({{318,212}, {245,155}}) do
+    width,height=viewport[1],viewport[2]
+    for _, kind in ipairs({"Теория", "Решатель", "Разбор"}) do
+        hasType(kind, firstResultY)
+        assert(showsType(kind,firstResultY+16))
+        on.enterKey()
+        hasType(kind, 4)
+        if width==245 and kind=="Разбор" then
+            has("Совместное распределение: от таблицы", 23)
+            has("к МНК", 39)
+        end
+        on.arrowKey("right")
+        hasType(kind, 4)
+        on.escapeKey()
+        hasType(kind, firstResultY)
+        on.tabKey()
+    end
+    on.charIn("uayta")
+    selectResult("Тест Уайта", "Теория")
+    for _, kind in ipairs({"Теория", "Решатель", "Разбор"}) do
+        on.tabKey()
+        hasType(kind, firstResultY)
+    end
+    on.escapeKey()
+end
+width,height=318,212
 for _, query in ipairs({"uaita", "UAYTA", "uayta khi-kvadrat", "уайта хи-квадрат"}) do
     expectResult(query, "Тест Уайта", "Теория")
 end
@@ -158,14 +194,14 @@ assert(highlightedY==selectedY)
 
 on.tabKey()
 has("Фильтр · Теория", height-31)
-has("Теория", firstResultY)
+hasType("Теория", firstResultY)
 on.arrowKey("right")
 has("Фильтр · Решатели", height-31)
-has("Решатель", firstResultY)
+hasType("Решатель", firstResultY)
 on.tabKey()
 has("Фильтр · Как решать", height-31)
 has("Тест Уайта по шагам", firstResultY)
-has("Разбор", firstResultY)
+hasType("Разбор", firstResultY)
 on.arrowKey("left")
 has("Фильтр · Решатели", height-31)
 on.arrowKey("left")
@@ -201,12 +237,18 @@ on.charIn("serii ostatkov")
 selectResult("Серии остатков", "Разбор")
 on.enterKey()
 has(walkthrough, 4)
+hasType("Разбор", 4)
+width=245
+hasType("Разбор", 4)
+has(walkthrough, 23)
+width=318
+has(walkthrough, 4)
 on.escapeKey(); on.escapeKey()
 width=320
 expectResult("rexact", "Точный критерий серий")
 on.charIn("krdiag\\rexact(")
 has("Точный критерий серий", firstResultY)
-has("Решатель", firstResultY)
+hasType("Решатель", firstResultY)
 on.enterKey()
 has("H помощь   C копия", height-31)
 on.charIn("h")
@@ -219,13 +261,14 @@ has("Перед Enter замените шаблоны")
 has("Esc / H назад", height-15)
 on.escapeKey()
 has("Точный критерий серий", 4)
+hasType("Решатель", 4)
 on.charIn("c")
 assert(copied and copied:match("^krdiag\\rexact%b()$") and copied:find("%d"),copied)
 has("Скопировано 1/", height-15)
 has("H помощь   C копия", height-31)
 on.escapeKey(); on.escapeKey()
 on.charIn("KREXTRA\\OLS(")
-has("Решатель", firstResultY)
+hasType("Решатель", firstResultY)
 on.enterKey()
 on.charIn("C")
 assert(copied and copied:match("^krextra\\ols%b()$") and copied:find("%d"),copied)
@@ -245,4 +288,4 @@ for i=1,25 do on.arrowKey("right"); paint() end
 on.arrowKey("left"); paint()
 on.escapeKey(); on.escapeKey()
 has("Теория · Практика · Как решать", height-31)
-print("PASS: bitmap Cyrillic, math and arrows, ranked search, three-section navigation, copy, help, pagination and resize")
+print("PASS: bitmap Cyrillic, math and arrows, right-aligned types, ranked search, navigation, copy, help, pagination and resize")

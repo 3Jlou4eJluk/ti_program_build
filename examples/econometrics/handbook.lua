@@ -138,6 +138,12 @@ local function fit(s, width)
     return result.."…"
 end
 
+local function drawType(gc, kind, w, y)
+    local x = w-5-textWidth(kind)
+    drawText(gc, kind, x, y)
+    return x-5-8
+end
+
 local function redraw() platform.window:invalidate() end
 
 local function setQuery(value)
@@ -172,7 +178,9 @@ function on.paint(gc)
     gc:setColorRGB(255,255,255)
     local label = query == "" and sections[section].title or "Общий поиск"
     local title = helping and "Как выполнить вызов" or (open and item.title or label.."  ·  "..#matches)
-    drawText(gc, fit(title, w-10), 5, 4)
+    local titleWidth = w-10
+    if open and not helping then titleWidth = drawType(gc, hitTypes[item.section], w, 4) end
+    drawText(gc, fit(title, titleWidth), 5, 4)
     gc:setColorRGB(16,34,43)
     if open then
         if lastWidth ~= w then
@@ -181,7 +189,7 @@ function on.paint(gc)
                 body = helpText()
             else
                 local heading = item.scope
-                if textWidth(item.title)>w-16 then heading = heading.." · "..item.title end
+                if textWidth(item.title)>titleWidth then heading = item.title.."\n"..heading end
                 body = heading.."\n"..item.body
             end
             lines = wrap(body, w-12)
@@ -204,16 +212,10 @@ function on.paint(gc)
             local y = firstY+(j-first)*step
             if j==selected then gc:setColorRGB(221,238,242);gc:fillRect(0,y,w,step) end
             local hit = matches[j]
-            local titleWidth = w-10
-            if query ~= "" then
-                local kind = hitTypes[hit.section]
-                local kindWidth = textWidth(kind)
-                titleWidth = titleWidth-kindWidth-8
-                gc:setColorRGB(45,73,84)
-                drawText(gc, kind, w-5-kindWidth, y+1)
-            end
+            gc:setColorRGB(45,73,84)
+            local rowTitleWidth = drawType(gc, hitTypes[hit.section], w, y+1)
             gc:setColorRGB(16,34,43)
-            drawText(gc, fit(hit.title, titleWidth), 5, y+1)
+            drawText(gc, fit(hit.title, rowTitleWidth), 5, y+1)
         end
         if #matches==0 then drawText(gc, fit("Совпадений нет", w-10), 5, 26+step) end
     end

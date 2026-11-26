@@ -2,7 +2,7 @@
 
 [Русская версия](README.ru.md)
 
-This example combines four TI-BASIC libraries for the non-CAS TI-Nspire CX II-T with a searchable Russian-language Lua handbook. The libraries export 45 calculation functions and four version helpers. The handbook has 24 theory cards and 45 solver cards, one per calculation function, with descriptions, sample problems, inputs and interpreted results. A third section, «Как решать» (Worked solutions), follows problems from the wording through the intermediate calculations to a written conclusion. A standalone Russian guide is included as `how-to-solve.ru.md` in the ZIP.
+This example combines four TI-BASIC libraries for the non-CAS TI-Nspire CX II-T with a searchable Russian-language Lua handbook. The libraries export 45 calculation functions and four version helpers. Each theory page opens with an intuitive explanation or a small thought experiment. The right-hand type label appears in browse lists, search results and on the open card. The handbook has 24 theory cards and 45 solver cards, one per calculation function, with descriptions, sample problems, inputs and interpreted results. A third section, «Как решать» (Worked solutions), follows problems from the wording through the intermediate calculations to a written conclusion. A standalone Russian guide is included as `how-to-solve.ru.md` in the ZIP.
 
 ## Install on the calculator
 

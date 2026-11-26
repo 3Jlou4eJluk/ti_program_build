@@ -29,7 +29,7 @@ The first script packages `libs/econ/Document.xml` and `Problem1.xml` as `build/
 
 ## Install the working example
 
-[Download the econometrics example](https://github.com/3Jlou4eJluk/ti_program_build/raw/refs/heads/main/downloads/econometrics-cx-ii-t.zip). Extract it on your computer. Copy the four files in `MyLib/` to the calculator's `MyLib` folder, copy `krguide.tns` to a document folder, then select **Doc → Refresh Libraries**. Open the handbook, or enter this call in Calculator to get the area under a step ROC curve and its Gini coefficient.
+[Download the econometrics example](https://github.com/3Jlou4eJluk/ti_program_build/raw/refs/heads/main/downloads/econometrics-cx-ii-t.zip). If you already have its four MyLib libraries from the first GitHub bundle, you can [update only the handbook](https://github.com/3Jlou4eJluk/ti_program_build/raw/refs/heads/main/downloads/krguide.tns). Extract it on your computer. Copy the four files in `MyLib/` to the calculator's `MyLib` folder, copy `krguide.tns` to a document folder, then select **Doc → Refresh Libraries**. Open the handbook, or enter this call in Calculator to get the area under a step ROC curve and its Gini coefficient.
 
 ```text
 krroc\steparea({0,.3,1},{.3,1})  →  {.79,.58}
